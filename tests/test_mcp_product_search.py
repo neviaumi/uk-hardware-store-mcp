@@ -1,4 +1,4 @@
-from mcp.client.streamable_http import streamablehttp_client
+from mcp.client.stdio import stdio_client, StdioServerParameters, get_default_environment
 from mcp.client.session import ClientSession
 import json
 import pytest
@@ -16,11 +16,14 @@ def mcp_server_config():
 
 @pytest.fixture
 async def mcp_client_session(mcp_server_config):
-    async with streamablehttp_client(mcp_server_config["test"]["url"]) as (
-        read_stream,
-        write_stream,
-        _,
-    ):
+    env = get_default_environment()
+    env["PYTHONPATH"] = "src"
+    server_params = StdioServerParameters(
+        command=mcp_server_config["test"]["command"],
+        args=mcp_server_config["test"]["args"],
+        env=env
+    )
+    async with stdio_client(server_params) as (read_stream, write_stream):
         # Create a session using the client streams
         async with ClientSession(read_stream, write_stream) as session:
             # Initialize the connection

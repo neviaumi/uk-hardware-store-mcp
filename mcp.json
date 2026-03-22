@@ -6,9 +6,13 @@
       "note": "For Streamable HTTP connections, add this URL directly in your MCP Client"
     },
     "test": {
-      "type": "streamable-http",
-      "url": "http://localhost:8080/mcp",
-      "note": "For Streamable HTTP connections, add this URL directly in your MCP Client"
+      "command": "uv",
+      "args": [
+        "run",
+        "python",
+        "-m",
+        "app.stdio"
+      ]
     }
   }
 }
