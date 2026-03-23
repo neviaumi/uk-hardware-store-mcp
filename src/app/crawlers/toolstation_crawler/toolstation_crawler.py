@@ -1,5 +1,6 @@
 from typing import TypedDict
 import urllib.parse
+import uuid
 
 from crawlee.crawlers import HttpCrawler
 from crawlee.http_clients import HttpxHttpClient
@@ -16,7 +17,7 @@ TOOLSTATION_API = "https://www.toolstation.com/api"
 
 @router.handler(label="toolstation product search")
 async def toolstation_product_search_handler(context: HttpCrawlingContext) -> None:
-    body = json.loads(context.http_response.read())
+    body = json.loads(await context.http_response.read())
 
     def _extract_product(product):
         return {
@@ -30,7 +31,7 @@ async def toolstation_product_search_handler(context: HttpCrawlingContext) -> No
 
     for product in body["response"]["docs"]:
         await context.push_data(
-            _extract_product(product), dataset_name=context.request.id
+            _extract_product(product), dataset_name=context.request.unique_key
         )
 
 
@@ -52,9 +53,9 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         }
     )
     request = Request.from_url(
-        f"{TOOLSTATION_API}/search/crs?{query}", label="toolstation product search"
+        f"{TOOLSTATION_API}/search/crs?{query}", label="toolstation product search", unique_key=str(uuid.uuid4())
     )
-    dataset = await Dataset.open(name=request.id)
+    dataset = await Dataset.open(name=request.unique_key)
     crawler = HttpCrawler(
         configure_logging=False, request_handler=router, http_client=HttpxHttpClient()
     )

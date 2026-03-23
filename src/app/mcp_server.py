@@ -10,14 +10,7 @@ from crawlee.storage_clients import MemoryStorageClient
 import json
 
 service_locator.set_storage_client(
-    MemoryStorageClient(
-        storage_dir="",
-        default_request_queue_id="",
-        default_key_value_store_id="",
-        default_dataset_id="",
-        write_metadata=False,
-        persist_storage=False,
-    )
+    MemoryStorageClient()
 )
 mcp = FastMCP("Hardware Store", streamable_http_path="/")
 

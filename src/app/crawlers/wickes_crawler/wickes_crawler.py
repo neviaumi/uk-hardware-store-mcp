@@ -1,6 +1,7 @@
 from typing import TypedDict
 import urllib.parse
 from bs4 import BeautifulSoup
+import uuid
 
 from crawlee.crawlers import ParselCrawler
 from crawlee.http_clients import HttpxHttpClient
@@ -29,7 +30,7 @@ async def wickes_product_search_handler(context: ParselCrawlingContext) -> None:
 
     for product in context.selector.css("[data-product-code]"):
         await context.push_data(
-            _extract_product(product), dataset_name=context.request.id
+            _extract_product(product), dataset_name=context.request.unique_key
         )
 
 
@@ -54,7 +55,7 @@ async def wickes_product_detail_handler(context: ParselCrawlingContext) -> None:
                 context.selector.css(".pdp-price__description *::text").getall()
             ),
         },
-        dataset_name=context.request.id,
+        dataset_name=context.request.unique_key,
     )
 
 
@@ -67,8 +68,8 @@ class ProductDetailResponse(TypedDict):
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
-    request = Request.from_url(url, label="wickes product detail")
-    dataset = await Dataset.open(name=request.id)
+    request = Request.from_url(url, label="wickes product detail", unique_key=str(uuid.uuid4()))
+    dataset = await Dataset.open(name=request.unique_key)
     crawler = ParselCrawler(
         configure_logging=False, request_handler=router, http_client=HttpxHttpClient()
     )
@@ -93,9 +94,9 @@ class ProductSearchResponse(TypedDict):
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
     query = urllib.parse.urlencode({"q": keyword})
     request = Request.from_url(
-        f"{WICKES_URL}/search?{query}", label="wickes product search"
+        f"{WICKES_URL}/search?{query}", label="wickes product search", unique_key=str(uuid.uuid4())
     )
-    dataset = await Dataset.open(name=request.id)
+    dataset = await Dataset.open(name=request.unique_key)
     crawler = ParselCrawler(
         configure_logging=False, request_handler=router, http_client=HttpxHttpClient()
     )
