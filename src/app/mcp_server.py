@@ -4,21 +4,9 @@ import app.crawlers.diy_dot_com_crawler as diy_dot_com_crawler
 import app.crawlers.toolstation_crawler as toolstation_crawler
 import app.crawlers.wickes_crawler as wickes_crawler
 import app.crawlers.screwfix_crawler as screwfix_crawler
-from crawlee import service_locator
-from crawlee.storage_clients import MemoryStorageClient
-
 import json
 
-service_locator.set_storage_client(
-    MemoryStorageClient(
-        storage_dir="",
-        default_request_queue_id="",
-        default_key_value_store_id="",
-        default_dataset_id="",
-        write_metadata=False,
-        persist_storage=False,
-    )
-)
+
 mcp = FastMCP("Hardware Store", streamable_http_path="/")
 
 

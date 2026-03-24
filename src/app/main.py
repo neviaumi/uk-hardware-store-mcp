@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.mcp import mcp
+from app.mcp_server import mcp
 
 app = FastAPI(lifespan=lambda app: mcp.session_manager.run())
 

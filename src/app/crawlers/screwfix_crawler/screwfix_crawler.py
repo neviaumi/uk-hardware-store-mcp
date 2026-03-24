@@ -1,15 +1,12 @@
 from typing import TypedDict
 import urllib.parse
 from bs4 import BeautifulSoup
+import uuid
 
-from crawlee.crawlers import ParselCrawler
-from crawlee.http_clients import HttpxHttpClient
 from crawlee import Request
 from crawlee.crawlers import ParselCrawlingContext
-from crawlee.router import Router
-from crawlee.storages import Dataset
+from app.crawlers.base.crawlers import router, run_crawler_with_result
 
-router = Router[ParselCrawlingContext]()
 SCREWFIX_URL = "https://www.screwfix.com"
 
 
@@ -45,7 +42,7 @@ async def screwfix_product_search_handler(context: ParselCrawlingContext) -> Non
 
     for product in context.selector.css("[data-qaid='product-card']"):
         await context.push_data(
-            _extract_product(product), dataset_name=context.request.id
+            _extract_product(product), dataset_name=context.request.unique_key
         )
 
 
@@ -70,7 +67,7 @@ async def screwfix_product_detail_handler(context: ParselCrawlingContext) -> Non
             ),
             "promo": promo_message if promo_message is not None else bulk_saves,
         },
-        dataset_name=context.request.id,
+        dataset_name=context.request.unique_key,
     )
 
 
@@ -83,18 +80,10 @@ class ProductDetailResponse(TypedDict):
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
-    request = Request.from_url(url, label="screwfix product detail")
-    dataset = await Dataset.open(name=request.id)
-    crawler = ParselCrawler(
-        configure_logging=False,
-        request_handler=router,
-        http_client=HttpxHttpClient(),
+    request = Request.from_url(
+        url, label="screwfix product detail", unique_key=str(uuid.uuid4())
     )
-    await crawler.run([request])
-    result = [item for item in (await dataset.get_data()).items]
-    crawler.stop()
-    await dataset.drop()
-    return result[0]
+    return (await run_crawler_with_result(request, "html"))[0]
 
 
 class ProductSearchResponse(TypedDict):
@@ -107,17 +96,8 @@ class ProductSearchResponse(TypedDict):
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
     query = urllib.parse.urlencode({"search": keyword})
     request = Request.from_url(
-        f"{SCREWFIX_URL}/search?{query}", label="screwfix product search"
+        f"{SCREWFIX_URL}/search?{query}",
+        label="screwfix product search",
+        unique_key=str(uuid.uuid4()),
     )
-    dataset = await Dataset.open(name=request.id)
-    crawler = ParselCrawler(
-        configure_logging=False,
-        request_handler=router,
-        http_client=HttpxHttpClient(),
-    )
-
-    await crawler.run([request])
-    result = [item for item in (await dataset.get_data()).items]
-    crawler.stop()
-    await dataset.drop()
-    return result
+    return await run_crawler_with_result(request, "html")

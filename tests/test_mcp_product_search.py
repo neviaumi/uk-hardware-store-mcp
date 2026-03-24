@@ -1,4 +1,8 @@
-from mcp.client.stdio import stdio_client, StdioServerParameters, get_default_environment
+from mcp.client.stdio import (
+    stdio_client,
+    StdioServerParameters,
+    get_default_environment,
+)
 from mcp.client.session import ClientSession
 import json
 import pytest
@@ -21,7 +25,7 @@ async def mcp_client_session(mcp_server_config):
     server_params = StdioServerParameters(
         command=mcp_server_config["test"]["command"],
         args=mcp_server_config["test"]["args"],
-        env=env
+        env=env,
     )
     async with stdio_client(server_params) as (read_stream, write_stream):
         # Create a session using the client streams
