@@ -3,14 +3,11 @@ import urllib.parse
 from bs4 import BeautifulSoup
 import uuid
 
-from crawlee.crawlers import ParselCrawler
-from crawlee.http_clients import HttpxHttpClient
 from crawlee import Request
 from crawlee.crawlers import ParselCrawlingContext
-from crawlee.router import Router
-from crawlee.storages import Dataset
+from app.crawlers.base.crawlers import run_crawler_with_result
+from app.crawlers.base.crawlers import router
 
-router = Router[ParselCrawlingContext]()
 DIY_DOT_COM_URL = "https://www.diy.com"
 
 
@@ -64,16 +61,7 @@ class ProductDetailResponse(TypedDict):
 
 async def product_detail(url: str) -> ProductDetailResponse:
     request = Request.from_url(url, label="diy.com product detail", unique_key=str(uuid.uuid4()))
-    dataset = await Dataset.open(name=request.unique_key)
-    crawler = ParselCrawler(
-        configure_logging=False, request_handler=router, http_client=HttpxHttpClient()
-    )
-    await crawler.run([request])
-
-    result = [item for item in (await dataset.get_data()).items]
-    crawler.stop()
-    await dataset.drop()
-    return result[0]
+    return (await run_crawler_with_result(request, "html"))[0]
 
 
 class ProductSearchResponse(TypedDict):
@@ -88,15 +76,4 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
     request = Request.from_url(
         f"{DIY_DOT_COM_URL}/search?{query}", label="diy.com product search", unique_key=str(uuid.uuid4())
     )
-    dataset = await Dataset.open(name=request.unique_key)
-
-    crawler = ParselCrawler(
-        configure_logging=False,
-        request_handler=router,
-        http_client=HttpxHttpClient(),
-    )
-    await crawler.run([request])
-    result = [item for item in (await dataset.get_data()).items]
-    crawler.stop()
-    await dataset.drop()
-    return result
+    return await run_crawler_with_result(request, "html")

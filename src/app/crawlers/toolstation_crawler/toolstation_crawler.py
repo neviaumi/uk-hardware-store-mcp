@@ -2,16 +2,11 @@ from typing import TypedDict
 import urllib.parse
 import uuid
 
-from crawlee.crawlers import HttpCrawler
-from crawlee.http_clients import HttpxHttpClient
 from crawlee import Request
 from crawlee.crawlers import HttpCrawlingContext
-from crawlee.router import Router
-from crawlee.storages import Dataset
+from app.crawlers.base.crawlers import router, run_crawler_with_result
 
 import json
-
-router = Router[HttpCrawlingContext]()
 TOOLSTATION_API = "https://www.toolstation.com/api"
 
 
@@ -55,13 +50,4 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
     request = Request.from_url(
         f"{TOOLSTATION_API}/search/crs?{query}", label="toolstation product search", unique_key=str(uuid.uuid4())
     )
-    dataset = await Dataset.open(name=request.unique_key)
-    crawler = HttpCrawler(
-        configure_logging=False, request_handler=router, http_client=HttpxHttpClient()
-    )
-
-    await crawler.run([request])
-    result = [item for item in (await dataset.get_data()).items]
-    crawler.stop()
-    await dataset.drop()
-    return result
+    return await run_crawler_with_result(request, "api")
