@@ -23,7 +23,6 @@ _html_crawler = ParselCrawler(
 )
 
 
-
 async def run_crawler_with_result(
     request: Request, content_type: Literal["html", "api"]
 ):
