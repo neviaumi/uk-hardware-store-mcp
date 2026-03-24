@@ -6,6 +6,7 @@ import uuid
 from crawlee import Request
 from crawlee.crawlers import ParselCrawlingContext
 from app.crawlers.base.crawlers import router, run_crawler_with_result
+
 WICKES_URL = "https://www.wickes.co.uk"
 
 
@@ -63,7 +64,9 @@ class ProductDetailResponse(TypedDict):
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
-    request = Request.from_url(url, label="wickes product detail", unique_key=str(uuid.uuid4()))
+    request = Request.from_url(
+        url, label="wickes product detail", unique_key=str(uuid.uuid4())
+    )
     return (await run_crawler_with_result(request, "html"))[0]
 
 
@@ -77,6 +80,8 @@ class ProductSearchResponse(TypedDict):
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
     query = urllib.parse.urlencode({"q": keyword})
     request = Request.from_url(
-        f"{WICKES_URL}/search?{query}", label="wickes product search", unique_key=str(uuid.uuid4())
+        f"{WICKES_URL}/search?{query}",
+        label="wickes product search",
+        unique_key=str(uuid.uuid4()),
     )
     return await run_crawler_with_result(request, "html")

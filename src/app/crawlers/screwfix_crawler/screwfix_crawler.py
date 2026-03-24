@@ -6,6 +6,7 @@ import uuid
 from crawlee import Request
 from crawlee.crawlers import ParselCrawlingContext
 from app.crawlers.base.crawlers import router, run_crawler_with_result
+
 SCREWFIX_URL = "https://www.screwfix.com"
 
 
@@ -79,7 +80,9 @@ class ProductDetailResponse(TypedDict):
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
-    request = Request.from_url(url, label="screwfix product detail", unique_key=str(uuid.uuid4()))
+    request = Request.from_url(
+        url, label="screwfix product detail", unique_key=str(uuid.uuid4())
+    )
     return (await run_crawler_with_result(request, "html"))[0]
 
 
@@ -93,6 +96,8 @@ class ProductSearchResponse(TypedDict):
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
     query = urllib.parse.urlencode({"search": keyword})
     request = Request.from_url(
-        f"{SCREWFIX_URL}/search?{query}", label="screwfix product search", unique_key=str(uuid.uuid4())
+        f"{SCREWFIX_URL}/search?{query}",
+        label="screwfix product search",
+        unique_key=str(uuid.uuid4()),
     )
     return await run_crawler_with_result(request, "html")

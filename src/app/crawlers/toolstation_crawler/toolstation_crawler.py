@@ -7,6 +7,7 @@ from crawlee.crawlers import HttpCrawlingContext
 from app.crawlers.base.crawlers import router, run_crawler_with_result
 
 import json
+
 TOOLSTATION_API = "https://www.toolstation.com/api"
 
 
@@ -48,6 +49,8 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         }
     )
     request = Request.from_url(
-        f"{TOOLSTATION_API}/search/crs?{query}", label="toolstation product search", unique_key=str(uuid.uuid4())
+        f"{TOOLSTATION_API}/search/crs?{query}",
+        label="toolstation product search",
+        unique_key=str(uuid.uuid4()),
     )
     return await run_crawler_with_result(request, "api")

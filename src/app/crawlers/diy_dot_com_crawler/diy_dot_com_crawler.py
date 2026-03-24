@@ -60,7 +60,9 @@ class ProductDetailResponse(TypedDict):
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
-    request = Request.from_url(url, label="diy.com product detail", unique_key=str(uuid.uuid4()))
+    request = Request.from_url(
+        url, label="diy.com product detail", unique_key=str(uuid.uuid4())
+    )
     return (await run_crawler_with_result(request, "html"))[0]
 
 
@@ -74,6 +76,8 @@ class ProductSearchResponse(TypedDict):
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
     query = urllib.parse.urlencode({"term": keyword})
     request = Request.from_url(
-        f"{DIY_DOT_COM_URL}/search?{query}", label="diy.com product search", unique_key=str(uuid.uuid4())
+        f"{DIY_DOT_COM_URL}/search?{query}",
+        label="diy.com product search",
+        unique_key=str(uuid.uuid4()),
     )
     return await run_crawler_with_result(request, "html")
