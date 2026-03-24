@@ -41,9 +41,9 @@ async def test_search_products_on_diy_dot_com(mcp_client_session):
         "search_products_on_diy_dot_com", {"keyword": TEST_KEYWORD}
     )
     assert tool_result.isError is False, "Tool call should no Error"
-    assert len(tool_result.content) > 0, (
-        "Tool call response content should not be empty"
-    )
+    assert (
+        len(tool_result.content) > 0
+    ), "Tool call response content should not be empty"
     response = json.loads(tool_result.content[0].text)
     assert len(response) > 0, f"${TEST_KEYWORD} should always return something"
 
@@ -54,9 +54,9 @@ async def test_search_products_on_toolstation(mcp_client_session):
         "search_products_on_toolstation", {"keyword": TEST_KEYWORD}
     )
     assert tool_result.isError is False, "Tool call should no Error"
-    assert len(tool_result.content) > 0, (
-        "Tool call response content should not be empty"
-    )
+    assert (
+        len(tool_result.content) > 0
+    ), "Tool call response content should not be empty"
     response = json.loads(tool_result.content[0].text)
     assert len(response) > 0, f"${TEST_KEYWORD} should always return something"
 
@@ -67,9 +67,9 @@ async def test_search_products_on_wickes(mcp_client_session):
         "search_products_on_wickes", {"keyword": TEST_KEYWORD}
     )
     assert tool_result.isError is False, "Tool call should no Error"
-    assert len(tool_result.content) > 0, (
-        "Tool call response content should not be empty"
-    )
+    assert (
+        len(tool_result.content) > 0
+    ), "Tool call response content should not be empty"
     response = json.loads(tool_result.content[0].text)
     assert len(response) > 0, f"${TEST_KEYWORD} should always return something"
 
@@ -80,8 +80,8 @@ async def test_search_products_on_screwfix(mcp_client_session):
         "search_products_on_screwfix", {"keyword": TEST_KEYWORD}
     )
     assert tool_result.isError is False, "Tool call should no Error"
-    assert len(tool_result.content) > 0, (
-        "Tool call response content should not be empty"
-    )
+    assert (
+        len(tool_result.content) > 0
+    ), "Tool call response content should not be empty"
     response = json.loads(tool_result.content[0].text)
     assert len(response) > 0, f"${TEST_KEYWORD} should always return something"

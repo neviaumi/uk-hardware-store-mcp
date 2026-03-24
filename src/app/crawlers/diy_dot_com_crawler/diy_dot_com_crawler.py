@@ -2,7 +2,6 @@ from typing import TypedDict
 import urllib.parse
 from bs4 import BeautifulSoup
 import uuid
-
 from crawlee import Request
 from crawlee.crawlers import ParselCrawlingContext
 from app.crawlers.base.crawlers import run_crawler_with_result

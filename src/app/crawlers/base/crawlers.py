@@ -1,5 +1,4 @@
 from typing import Literal
-
 from crawlee.router import Router
 from crawlee.crawlers import ParselCrawler
 from crawlee.http_clients import HttpxHttpClient
@@ -7,19 +6,19 @@ from crawlee.crawlers import HttpCrawler
 from crawlee import Request
 from crawlee.storages import Dataset
 from crawlee.storage_clients import MemoryStorageClient
+from crawlee import service_locator
 
+service_locator.set_storage_client(MemoryStorageClient())
 router = Router()
 _api_crawler = HttpCrawler(
     configure_logging=False,
     request_handler=router,
     http_client=HttpxHttpClient(),
-    storage_client=MemoryStorageClient(),
 )
 _html_crawler = ParselCrawler(
     configure_logging=False,
     request_handler=router,
     http_client=HttpxHttpClient(),
-    storage_client=MemoryStorageClient(),
 )
 
 
