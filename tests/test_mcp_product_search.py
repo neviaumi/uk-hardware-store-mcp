@@ -21,7 +21,6 @@ def mcp_server_config():
 @pytest.fixture
 async def mcp_client_session(mcp_server_config):
     env = get_default_environment()
-    env["PYTHONPATH"] = "src"
     server_params = StdioServerParameters(
         command=mcp_server_config["test"]["command"],
         args=mcp_server_config["test"]["args"],

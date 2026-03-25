@@ -19,15 +19,15 @@ A conversational AI assistant for hardware stores that can search for products a
 │   ├── deploy.sh           # Script to deploy the MCP application
 │   ├── setup.sh            # Script to set up dependencies
 │   └── start.sh            # Script to start the development server
-└── src/                    # Source code
-    └── app/                # Main application
-        ├── crawlers/       # Web crawlers for different retailers
-        │   ├── diy_dot_com_crawler/
-        │   ├── screwfix_crawler/
-        │   ├── toolstation_crawler/
-        │   └── wickes_crawler/
-        ├── main.py         # Demo script
-        └── server.py       # MCP server definition
+├── app/                    # Main application source code
+│   ├── crawlers/           # Web crawlers for different retailers
+│   │   ├── diy_dot_com_crawler/
+│   │   ├── screwfix_crawler/
+│   │   ├── toolstation_crawler/
+│   │   └── wickes_crawler/
+│   ├── main.py             # Demo script and FastAPI entry point
+│   ├── mcp_server.py       # MCP server definition
+│   └── stdio.py            # MCP stdio interface
 ```
 
 ## Requirements
@@ -77,7 +77,7 @@ bash ./scripts/deploy.sh
 The project includes a demo script that shows how to use the crawlers directly:
 
 ```bash
-uv run src/app/main.py
+uv run app/main.py
 ```
 
 This will search for "M6 coach screw table leg" on DIY.com and print the details of the first product found.
