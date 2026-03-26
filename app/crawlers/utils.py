@@ -13,3 +13,11 @@ def clean_html(html):
 
     # Return the serialised HTML
     return sel.get()
+
+
+def clean_text(text: list[str], separator: str = " ") -> str:
+    if not text:
+        return ""
+    return separator.join(
+        [string.strip() for string in text if len(string.strip()) > 0]
+    )
