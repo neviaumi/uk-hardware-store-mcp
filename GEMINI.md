@@ -28,18 +28,18 @@ The application can be started using the provided bash scripts, which run the Fa
 
 To start the application in development mode (runs on port 8080):
 ```bash
-./scripts/start.sh --dev
+bash ./scripts/start.sh --dev
 ```
 
 To start the application in production mode (runs on port 8081):
 ```bash
-./scripts/start.sh --prod
+bash ./scripts/start.sh --prod
 ```
 
 ## Testing
 To run code formatting checks and linting rules (via Ruff):
 ```bash
-./scripts/test.sh
+bash ./scripts/test.sh
 ```
 
 **Testing Framework**: For executing the actual test suite, this repository utilizes **`uv run pytest`**. To run all unit and integration tests defined in the `tests/` directory, ensure you execute:

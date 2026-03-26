@@ -1,58 +1,11 @@
 from typing import TypedDict
 import urllib.parse
-from bs4 import BeautifulSoup
-import uuid
+from parsel import Selector
 
-from crawlee import Request
-from crawlee.crawlers import ParselCrawlingContext
-from app.crawlers.base.crawlers import router, run_crawler_with_result
+import app.crawlers.http_client as http_client
+from app.crawlers.utils import clean_html
 
 WICKES_URL = "https://www.wickes.co.uk"
-
-
-@router.handler(label="wickes product search")
-async def wickes_product_search_handler(context: ParselCrawlingContext) -> None:
-    def _extract_product(product_selector):
-        product_url = product_selector.css("a::attr(href)").get()
-        promo = product_selector.css(".products-list-v2__badge::text").get()
-        return {
-            "title": product_selector.css("a::attr(title)").get(),
-            "price": product_selector.css(".product-card__price-value::text")
-            .get()
-            .strip(),
-            "url": f"{WICKES_URL}{product_url}",
-            "promo": promo.strip() if promo is not None and "for" in promo else None,
-        }
-
-    for product in context.selector.css("[data-product-code]"):
-        await context.push_data(
-            _extract_product(product), dataset_name=context.request.unique_key
-        )
-
-
-@router.handler(label="wickes product detail")
-async def wickes_product_detail_handler(context: ParselCrawlingContext) -> None:
-    def clean_html(html):
-        soup = BeautifulSoup(html, "lxml")
-        for tag in soup.find_all(True):
-            tag.attrs.pop("style", None)
-            tag.attrs.pop("class", None)
-        return str(soup)
-
-    await context.push_data(
-        {
-            "title": context.selector.css("title::text").get().strip(),
-            "price": context.selector.css(".main-price__value::text").get().strip(),
-            "description": context.selector.css(".product-main-info__description::text")
-            .get()
-            .strip(),
-            "detail": clean_html(context.selector.css(".additional-info").get()),
-            "promo": "".join(
-                context.selector.css(".pdp-price__description *::text").getall()
-            ),
-        },
-        dataset_name=context.request.unique_key,
-    )
 
 
 class ProductDetailResponse(TypedDict):
@@ -64,10 +17,22 @@ class ProductDetailResponse(TypedDict):
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
-    request = Request.from_url(
-        url, label="wickes product detail", unique_key=str(uuid.uuid4())
-    )
-    return (await run_crawler_with_result(request, "html"))[0]
+    async with http_client.create_client() as client:
+        response = await client.get(url)
+
+    selector = Selector(text=response.text)
+
+    title = selector.css("title::text").get()
+    price = selector.css(".main-price__value::text").get()
+    description = selector.css(".product-main-info__description::text").get()
+
+    return {
+        "title": title.strip() if title else "",
+        "price": price.strip() if price else "",
+        "description": description.strip() if description else "",
+        "detail": clean_html(selector.css(".additional-info").get()) or "",
+        "promo": "".join(selector.css(".pdp-price__description *::text").getall()),
+    }
 
 
 class ProductSearchResponse(TypedDict):
@@ -79,9 +44,27 @@ class ProductSearchResponse(TypedDict):
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
     query = urllib.parse.urlencode({"q": keyword})
-    request = Request.from_url(
-        f"{WICKES_URL}/search?{query}",
-        label="wickes product search",
-        unique_key=str(uuid.uuid4()),
-    )
-    return await run_crawler_with_result(request, "html")
+    url = f"{WICKES_URL}/search?{query}"
+
+    async with http_client.create_client() as client:
+        response = await client.get(url)
+
+    selector = Selector(text=response.text)
+
+    results = []
+    for product in selector.css("[data-product-code]"):
+        product_url = product.css("a::attr(href)").get()
+        promo = product.css(".products-list-v2__badge::text").get()
+        title = product.css("a::attr(title)").get()
+        price = product.css(".product-card__price-value::text").get()
+
+        results.append(
+            {
+                "title": title.strip() if title else "",
+                "price": price.strip() if price else "",
+                "url": f"{WICKES_URL}{product_url}" if product_url else "",
+                "promo": promo.strip() if promo and "for" in promo else None,
+            }
+        )
+
+    return results

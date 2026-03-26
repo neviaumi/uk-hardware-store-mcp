@@ -1,34 +1,9 @@
 from typing import TypedDict
 import urllib.parse
-import uuid
 
-from crawlee import Request
-from crawlee.crawlers import HttpCrawlingContext
-from app.crawlers.base.crawlers import router, run_crawler_with_result
-
-import json
+import app.crawlers.http_client as http_client
 
 TOOLSTATION_API = "https://www.toolstation.com/api"
-
-
-@router.handler(label="toolstation product search")
-async def toolstation_product_search_handler(context: HttpCrawlingContext) -> None:
-    body = json.loads(await context.http_response.read())
-
-    def _extract_product(product):
-        return {
-            "title": product["title"].strip(),
-            "price": f"£{product['price']}",
-            "url": product["url"].strip(),
-            "promo": product["weboverlaytext"]
-            if "for" in product.get("weboverlaytext", "")
-            else None,
-        }
-
-    for product in body["response"]["docs"]:
-        await context.push_data(
-            _extract_product(product), dataset_name=context.request.unique_key
-        )
 
 
 class ProductSearchResponse(TypedDict):
@@ -48,9 +23,30 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
             "skipCache": "true",
         }
     )
-    request = Request.from_url(
-        f"{TOOLSTATION_API}/search/crs?{query}",
-        label="toolstation product search",
-        unique_key=str(uuid.uuid4()),
-    )
-    return await run_crawler_with_result(request, "api")
+    url = f"{TOOLSTATION_API}/search/crs?{query}"
+
+    async with http_client.create_client() as client:
+        response = await client.get(url)
+
+    body = response.json()
+    results = []
+
+    # Safe extraction depending on API response format
+    docs = body.get("response", {}).get("docs", [])
+
+    for product in docs:
+        title = product.get("title", "")
+        price = product.get("price", "")
+        product_url = product.get("url", "")
+        promo = product.get("weboverlaytext", "")
+
+        results.append(
+            {
+                "title": title.strip() if title else "",
+                "price": f"£{price}" if price else "",
+                "url": product_url.strip() if product_url else "",
+                "promo": promo if promo and "for" in promo else None,
+            }
+        )
+
+    return results
