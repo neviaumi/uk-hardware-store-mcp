@@ -91,7 +91,7 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
             {
                 "title": title.strip(),
                 "price": price.strip(),
-                "url": f"https://www.homebase.co.uk{url_path}" if url_path else ""
+                "url": f"https://www.homebase.co.uk{url_path}" if url_path else "",
             }
         )
 
