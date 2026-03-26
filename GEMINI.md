@@ -5,7 +5,7 @@ This project STRICTLY adheres to the Spec Driven Development workflow. The Agent
 1. **Discovery & Investigation**: Understand the goal, read relevant files, and check current system statuses.
 2. **Drafting the Plan**: Produce a clear `implementation_plan.md` and `task.md` detailing all architectural adjustments.
 3. **Safety Hook (Approval)**: Use the `notify_user` tool with `BlockedOnUser: true` to pause and receive explicit user authorization. **No file modifications are allowed before this step.**
-4. **Execution**: Apply the approved changes strictly. 
+4. **Execution**: Apply the approved changes strictly.
 5. **Testing & Verification**: Validate code utilizing `scripts/test.sh` (lint/format) and `uv run pytest` (behavioral).
 6. **Documentation Walkthrough**: Produce a final `walkthrough.md` capturing what was executed and proven through testing.
 
@@ -13,6 +13,12 @@ This project STRICTLY adheres to the Spec Driven Development workflow. The Agent
 - **Mandatory Plan Approval**: The agent cannot execute destructive or constructive changes on the primary codebase without an approved implementation plan.
 - **Architectural Boundary Adherence**: Follow the exact folder conventions established for `app/`, `tests/`, and `scripts/`. Do not produce files in arbitrary locations.
 - **Verification-First**: Always verify application behavior immediately after execution via `pytest` and Ruff linting checks.
+
+## Debugging Protocol
+This project utilizes a dedicated `.debug/` folder at the root for temporary file debugging and execution state analysis.
+- **Autonomous Analysis**: The agent is authorized to create, read, and delete files within `.debug/` to capture stack traces, variable states, or raw tool outputs.
+- **Overhead Reduction**: The agent should utilize this folder to resolve execution ambiguities independently before querying the user.
+- **Persistence**: Files in `.debug/` are temporary and excluded from version control.
 
 ## Project Architecture
 This repository uses the following directory structure:
