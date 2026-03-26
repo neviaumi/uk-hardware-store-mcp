@@ -54,7 +54,6 @@ class ProductSearchResponse(TypedDict):
     title: str
     price: str
     url: str
-    promo: str | None
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
@@ -92,8 +91,7 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
             {
                 "title": title.strip(),
                 "price": price.strip(),
-                "url": f"https://www.homebase.co.uk{url_path}" if url_path else "",
-                "promo": None,  # Adding back for test consistency
+                "url": f"https://www.homebase.co.uk{url_path}" if url_path else ""
             }
         )
 

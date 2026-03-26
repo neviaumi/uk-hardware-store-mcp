@@ -12,7 +12,6 @@ async def test_product_search():
         assert item["title"]
         assert item["price"]
         assert item["url"].startswith("https://www.homebase.co.uk")
-        assert "promo" in item
 
 
 async def test_product_detail():

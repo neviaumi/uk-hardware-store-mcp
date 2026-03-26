@@ -84,3 +84,16 @@ async def test_search_products_on_screwfix(mcp_client_session):
     ), "Tool call response content should not be empty"
     response = json.loads(tool_result.content[0].text)
     assert len(response) > 0, f"${TEST_KEYWORD} should always return something"
+
+
+async def test_search_products_on_homebase(mcp_client_session):
+    # Call a tool
+    tool_result = await mcp_client_session.call_tool(
+        "search_products_on_homebase", {"keyword": TEST_KEYWORD}
+    )
+    assert tool_result.isError is False, "Tool call should no Error"
+    assert (
+        len(tool_result.content) > 0
+    ), "Tool call response content should not be empty"
+    response = json.loads(tool_result.content[0].text)
+    assert len(response) > 0, f"${TEST_KEYWORD} should always return something"

@@ -4,6 +4,7 @@ import app.crawlers.diy_dot_com_crawler as diy_dot_com_crawler
 import app.crawlers.toolstation_crawler as toolstation_crawler
 import app.crawlers.wickes_crawler as wickes_crawler
 import app.crawlers.screwfix_crawler as screwfix_crawler
+import app.crawlers.homebase_crawler.homebase_crawler as homebase_crawler
 import json
 
 
@@ -290,4 +291,69 @@ async def get_product_detail_on_screwfix(product_url: str) -> str:
     """
 
     result = await screwfix_crawler.product_detail(product_url)
+    return json.dumps(result)
+
+
+@mcp.tool(
+    "search_products_on_homebase",
+    "Search for products on homebase.co.uk based on a provided keyword.",
+)
+async def search_products_on_homebase(keyword: str) -> str:
+    """Search for products on homebase.co.uk based on a provided keyword.
+
+    Args:
+        keyword (str): The search term to query homebase.co.uk's product catalog.
+
+    Returns:
+        str: A JSON-encoded array of product data matching the given keyword.
+             Each product entry contains:
+                - "title" (str): The product name.
+                - "price" (str): The price of the product as a string.
+                - "url" (str): The full URL linking to the product's detail page.
+
+    Example Result:
+        [
+            {
+                "title": "Hammer",
+                "price": "£9.99",
+                "url": "https://www.homebase.co.uk/hammer"
+            },
+            {
+                "title": "Drill",
+                "price": "£49.99",
+                "url": "https://www.homebase.co.uk/drill"
+            }
+        ]
+    """
+    result = await homebase_crawler.product_search(keyword)
+
+    return json.dumps(result)
+
+
+@mcp.tool(
+    "get_product_detail_on_homebase",
+    "Retrieve detailed product information from homebase.co.uk for a specific product URL.",
+)
+async def get_product_detail_on_homebase(product_url: str) -> str:
+    """Retrieve detailed product information from homebase.co.uk for a specific product URL.
+
+    Args:
+        product_url (str): The full product URL (e.g., `https://www.homebase.co.uk/product/hammer`).
+
+    Returns:
+        str: A JSON-encoded object containing the product's detailed information:
+                - "title" (str): The product name.
+                - "price" (str): The price of the product as a string.
+                - "detail" (str): Cleaned HTML content describing the product.
+                - "promo" (str): The promotional text for the product, if any.
+
+    Example Result:
+        {
+            "title": "Hammer",
+            "price": "£9.99",
+            "detail": "<div><h1>Hammer Details</h1><p>Durable and reliable design.</p></div>"
+        }
+    """
+
+    result = await homebase_crawler.product_detail(product_url)
     return json.dumps(result)
