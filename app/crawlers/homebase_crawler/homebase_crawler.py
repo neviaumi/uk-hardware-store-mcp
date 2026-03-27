@@ -1,11 +1,11 @@
-from typing import TypedDict
 import urllib.parse
+from typing import TypedDict
+
 from parsel import Selector
 
 import app.crawlers.http_client as http_client
+import app.config as config
 from app.crawlers.utils import clean_html, clean_text
-
-HOMEBASE_API = "https://www.homebase.co.uk/en-uk"
 
 
 class ProductDetailResponse(TypedDict):
@@ -62,7 +62,7 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
             "text": keyword,
         }
     )
-    url = f"{HOMEBASE_API}/search/?{query}"
+    url = f"{config.HOMEBASE_URL}/search?{query}"
 
     async with http_client.create_client() as client:
         response = await client.get(url)
@@ -91,7 +91,7 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
             {
                 "title": title.strip(),
                 "price": price.strip(),
-                "url": f"https://www.homebase.co.uk{url_path}" if url_path else "",
+                "url": f"{config.HOMEBASE_URL}{url_path}" if url_path else "",
             }
         )
 
