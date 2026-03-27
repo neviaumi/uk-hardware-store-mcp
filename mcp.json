@@ -9,7 +9,6 @@
       "command": "uv",
       "args": [
         "run",
-        "python",
         "-m",
         "app.stdio"
       ]

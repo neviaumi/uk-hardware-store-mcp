@@ -8,9 +8,9 @@ from mcp.client.stdio import (
     stdio_client,
 )
 
-TEST_KEYWORD = "M6 Bolts"
+from tests import skip_if_ci
 
-pytestmark = pytest.mark.anyio
+TEST_KEYWORD = "M6 Bolts"
 
 
 @pytest.fixture
@@ -35,6 +35,7 @@ async def mcp_client_session(mcp_server_config):
             yield session
 
 
+@skip_if_ci
 async def test_search_products_on_diy_dot_com(mcp_client_session):
     # Call a tool
     tool_result = await mcp_client_session.call_tool(
@@ -48,6 +49,7 @@ async def test_search_products_on_diy_dot_com(mcp_client_session):
     assert len(response) > 0, f"${TEST_KEYWORD} should always return something"
 
 
+@skip_if_ci
 async def test_search_products_on_toolstation(mcp_client_session):
     # Call a tool
     tool_result = await mcp_client_session.call_tool(
@@ -61,6 +63,7 @@ async def test_search_products_on_toolstation(mcp_client_session):
     assert len(response) > 0, f"${TEST_KEYWORD} should always return something"
 
 
+@skip_if_ci
 async def test_search_products_on_wickes(mcp_client_session):
     # Call a tool
     tool_result = await mcp_client_session.call_tool(
@@ -74,6 +77,7 @@ async def test_search_products_on_wickes(mcp_client_session):
     assert len(response) > 0, f"${TEST_KEYWORD} should always return something"
 
 
+@skip_if_ci
 async def test_search_products_on_screwfix(mcp_client_session):
     # Call a tool
     tool_result = await mcp_client_session.call_tool(
@@ -87,6 +91,7 @@ async def test_search_products_on_screwfix(mcp_client_session):
     assert len(response) > 0, f"${TEST_KEYWORD} should always return something"
 
 
+@skip_if_ci
 async def test_search_products_on_homebase(mcp_client_session):
     # Call a tool
     tool_result = await mcp_client_session.call_tool(
