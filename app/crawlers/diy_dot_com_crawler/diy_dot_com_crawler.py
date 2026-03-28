@@ -1,11 +1,11 @@
-from typing import TypedDict
 import urllib.parse
+from typing import TypedDict
+
 from parsel import Selector
 
+import app.config as config
 import app.crawlers.http_client as http_client
 from app.crawlers.utils import clean_html
-
-DIY_DOT_COM_URL = "https://www.diy.com"
 
 
 class ProductDetailResponse(TypedDict):
@@ -40,7 +40,7 @@ class ProductSearchResponse(TypedDict):
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
     query = urllib.parse.urlencode({"term": keyword})
-    url = f"{DIY_DOT_COM_URL}/search?{query}"
+    url = f"{config.DIY_DOT_COM_URL}/search?{query}"
 
     async with http_client.create_client() as client:
         response = await client.get(url)
@@ -58,7 +58,7 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
             {
                 "title": title,
                 "price": price,
-                "url": f"{DIY_DOT_COM_URL}{product_url}" if product_url else "",
+                "url": f"{config.DIY_DOT_COM_URL}{product_url}" if product_url else "",
                 "promo": promo,
             }
         )

@@ -19,4 +19,9 @@ def mock_server(httpserver: httpserver.HTTPServer, monkeypatch):
         "HOMEBASE_URL",
         httpserver.url_for("/homebase/en-uk"),
     )
+    monkeypatch.setattr(
+        config,
+        "DIY_DOT_COM_URL",
+        httpserver.url_for("/b&q"),
+    )
     return httpserver

@@ -1,12 +1,17 @@
+import pytest
+
 from app.crawlers.homebase_crawler import homebase_crawler
+from tests.crawler import TEST_SEARCH_KEYWORD
 from tests.mock_server import mock_response_data
+
+pytestmark = pytest.mark.anyio
 
 
 async def test_product_search(mock_server):
     mock_server.expect_request("/homebase/en-uk/search").respond_with_data(
         mock_response_data("product_search_homebase.html")
     )
-    results = await homebase_crawler.product_search("m8 hex bolt")
+    results = await homebase_crawler.product_search(TEST_SEARCH_KEYWORD)
     assert isinstance(results, list)
     assert len(results) > 0
     for item in results:

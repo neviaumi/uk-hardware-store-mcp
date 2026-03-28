@@ -52,3 +52,8 @@ bash ./scripts/test.sh
 ```bash
 uv run pytest
 ```
+
+### Mocking and Test Generation
+All new test generation for HTTP-based interactions **MUST** utilize `pytest-httpserver` for mock setups.
+- **Reference Patterns**: Consult `@tests/mock_server` for established mock server configurations and HTML fixture usage.
+- **Exceptions**: Direct MCP server integration tests (e.g., `tests/test_mcp_product_search.py`) are exempted from this requirement as they interact with the server via `stdio` rather than HTTP.

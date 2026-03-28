@@ -1,87 +1,116 @@
-# Hardware Store AI Assistant
+# UK Hardware Store MCP Server
 
-A conversational AI assistant for hardware stores that can search for products across multiple UK hardware retailers (DIY.com, Screwfix, Toolstation, and Wickes). The assistant helps customers find the right tools and equipment for their DIY projects by providing product recommendations, detailed information, and price comparisons.
+Real-time product search and comparison across major UK hardware retailers via the Model Context Protocol (MCP).
+
+## Value Proposition
+
+Searching for DIY supplies across multiple retailers is notoriously fragmented. This project provides a unified, AI-ready interface to discover, compare, and retrieve product data from the UK's leading hardware stores. By leveraging the **Model Context Protocol (MCP)**, it enables AI assistants like Claude to act as a knowledgeable DIY consultant, capable of finding the right parts at the best prices in seconds.
+
+## Product Definition
+
+The **UK Hardware Store MCP Server** is a high-performance scraping and integration layer. It exposes a suite of tools that allow for:
+- **Keyword Search**: Find products across DIY.com, Screwfix, Homebase, Toolstation, and Wickes simultaneously.
+- **Deep Detail Retrieval**: Fetch technical specifications, stock status, and current pricing.
+- **Unified Schema**: Standardizes disparate retailer data into a consistent format for easy processing.
 
 ## Features
 
-- **Product Search**: Search for products across multiple hardware retailers (DIY.com, Screwfix, Toolstation, and Wickes)
-- **Product Details**: Retrieve detailed product information including specifications, prices, and promotions
-- **Conversational Interface**: AI assistant that understands customer requirements and provides tailored recommendations
-- **Price Comparison**: Compare prices across different retailers to find the best deals
+- **Multi-Retailer Support**: Built-in crawlers for:
+  - **DIY.com (B&Q)**
+  - **Screwfix**
+  - **Homebase**
+  - **Toolstation**
+  - **Wickes**
+- **Robust Scraping Infrastructure**:
+  - TLS Fingerprinting via `curl-cffi` to bypass common bot detection.
+  - Dynamic header generation using `browserforge`.
+  - Fast, reliable parsing with `parsel`.
+- **MCP Native**: Plugs directly into any MCP-compliant client (e.g., Claude Desktop, Zed).
 
 ## Project Structure
 
-```
-├── LICENSE                 # Unlicense (public domain)
-├── pyproject.toml          # Project metadata and dependencies
-├── scrapy.cfg              # Scrapy configuration
-├── scripts/                # Utility scripts
-│   ├── deploy.sh           # Script to deploy the MCP application
-│   ├── setup.sh            # Script to set up dependencies
-│   └── start.sh            # Script to start the development server
+```text
 ├── app/                    # Main application source code
-│   ├── crawlers/           # Web crawlers for different retailers
-│   │   ├── diy_dot_com_crawler/
-│   │   ├── screwfix_crawler/
-│   │   ├── toolstation_crawler/
-│   │   └── wickes_crawler/
-│   ├── main.py             # Demo script and FastAPI entry point
-│   ├── mcp_server.py       # MCP server definition
-│   └── stdio.py            # MCP stdio interface
+│   ├── crawlers/           # Specialized retailer crawlers
+│   │   ├── http_client.py  # Centralized robust HTTP client
+│   │   ├── utils.py        # Shared parsing and helper utilities
+│   │   └── [retailer]_crawler/
+│   ├── config.py           # Application configuration
+│   ├── mcp_server.py       # MCP Tool definitions and routing
+│   └── stdio.py            # MCP stdio interface entry point
+├── tests/                  # Robust test suite with mock servers
+├── scripts/                # Life-cycle management scripts
+│   ├── start.sh            # Development and production server start
+│   ├── setup.sh            # Environment initialization
+│   └── test.sh             # Linting and formatting checks
+├── pyproject.toml          # Modern dependency management via uv
+├── mcp.json                # MCP configuration template
+└── GEMINI.md               # Spec Driven Development workflow documentation
 ```
 
-## Requirements
+## Getting Started
 
-- Python 3.12 or higher
-- uv (Python package manager)
+### Prerequisites
 
-## Dependencies
+- **Python 3.12.0** or higher.
+- **[uv](https://docs.astral.sh/uv/)**: Fast Python package manager (required).
 
-- mcp[cli] 1.9.1 - Framework for AI assistant functionality
-- beautifulsoup4 4.13.4 - Library for web scraping and parsing HTML
-- crawlee[cli,parsel] 0.6.9+ - Web crawling/scraping framework
+### Installation
 
-## Installation
-
-1. Clone the repository:
+1. **Clone the repository**:
    ```bash
    git clone git@github.com:neviaumi/uk-hardware-store-mcp.git
    cd uk-hardware-store-mcp
    ```
 
-2. Install dependencies using the setup script:
+2. **Setup the environment**:
    ```bash
-   bash ./scripts/setup.sh
+   uv sync
    ```
 
-## Usage
+### Configuration
 
-### Starting the Development Server
+To use this with an MCP client (like Claude Desktop), add the server to your `mcp_config.json`:
 
-Run the development server:
-```bash
-bash ./scripts/start.sh
+```json
+{
+  "mcpServers": {
+    "uk-hardware-store": {
+      "command": "bash",
+      "args": ["-c", "cd /path/to/uk-hardware-store-mcp && ./scripts/start.sh --prod"]
+    }
+  }
+}
 ```
 
-This will start the MCP development server, which provides a web interface for interacting with the AI assistant.
+### Usage
 
-### Deploying the Application
-
-To deploy the application:
+#### Development Server
+Start the server in development mode (port 8080):
 ```bash
-bash ./scripts/deploy.sh
+bash ./scripts/start.sh --dev
 ```
 
-### Using the Demo Script
-
-The project includes a demo script that shows how to use the crawlers directly:
-
+#### Production Mode
+Launch for MCP client integration:
 ```bash
-uv run app/main.py
+bash ./scripts/start.sh --prod
 ```
 
-This will search for "M6 coach screw table leg" on DIY.com and print the details of the first product found.
+## Testing and Quality
+
+The project adheres to **Spec Driven Development (SDD)**. For more details, see [GEMINI.md](GEMINI.md).
+
+Run linting and formatting:
+```bash
+bash ./scripts/test.sh
+```
+
+Run the behavioral test suite:
+```bash
+uv run pytest
+```
 
 ## License
 
-This project is released into the public domain under the Unlicense. See the [LICENSE](LICENSE) file for details.
+This project is released into the public domain under the [Unlicense](LICENSE).

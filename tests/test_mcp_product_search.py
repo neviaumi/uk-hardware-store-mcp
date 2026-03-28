@@ -10,6 +10,8 @@ from mcp.client.stdio import (
 
 from tests import skip_if_ci
 
+pytestmark = pytest.mark.anyio
+
 TEST_KEYWORD = "M6 Bolts"
 
 
