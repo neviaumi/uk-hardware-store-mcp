@@ -24,4 +24,9 @@ def mock_server(httpserver: httpserver.HTTPServer, monkeypatch):
         "DIY_DOT_COM_URL",
         httpserver.url_for("/b&q"),
     )
+    monkeypatch.setattr(
+        config,
+        "WICKES_URL",
+        httpserver.url_for("/wickes"),
+    )
     return httpserver

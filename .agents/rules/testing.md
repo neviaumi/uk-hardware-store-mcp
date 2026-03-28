@@ -1,0 +1,69 @@
+---
+trigger: always_on
+description: This rule governs code quality, linting (Ruff), the pytest framework, and the specialized mock data capture protocols.
+---
+
+# Testing Protocols
+
+This document defines the requirements and procedures for all testing activities within the repository, ensuring code quality and environment parity.
+
+## 1. General Testing Standards
+
+### Linting and Formatting
+To maintain code consistency and catch logical errors, use **Ruff**.
+```bash
+# Run formatting checks and linting rules
+bash ./scripts/test.sh
+```
+
+### Behavioral Testing
+The terminal execution of tests is managed via `uv run pytest`.
+```bash
+# Run all unit and integration tests
+uv run pytest
+```
+
+---
+
+## 2. Mock Data Capture Protocol
+
+> [!NOTE]
+> When this rule is active, the agent should automatically suggest using `curl` for fetching new HTML snapshots if the existing mocks are missing or user ask for refresh/reload explicitly.
+
+To ensure parity between the real-world site and the mocked environment, all HTML fixtures **MUST** be captured using a standardized `curl` command to avoid browser-specific DOM manipulations or missing attributes.
+
+### Capture Command
+Use the following `curl` flags to capture the raw HTML into the `.debug/` folder:
+- `-s`: Silent mode (no progress bar).
+- `-L`: Follow redirects (essential for search results that may point to canonical URLs).
+- `-H`: Spoof a modern browser `User-Agent` to avoid bot-detect blocks.
+
+```bash
+curl -sL "https://www.wickes.co.uk/search?q=M6+Hex+Bolt" \
+  -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+  > .debug/product_search_wickes.html
+```
+
+### Post-Processing Logic
+Before moving the file to `tests/mock_server/`, perform the following checks:
+- **Selector Verification**: Use `grep` or `parsel` in a scratch script to confirm that the crawler's target selectors (e.g., `[data-product-code]`, `.main-price__value`) exist in the raw HTML.
+- **Path Correction**: If the crawler relies on absolute URLs prepended by a base, ensure the mock server mimics this directory structure.
+- **Cleanup**: Remove large `<script>` or `<style>` blocks only if they cause significant parsing latency. Do not modify the structure of the data-bearing elements.
+
+### Integration Guide
+Captured files are served by the local `pytest-httpserver`. 
+- **Mapping**: Register the endpoint in `tests/mock_server/__init__.py`.
+- **Mocking**: Use `monkeypatch` to redirect the `app.config` URL constants to the `mock_server.url_for()` equivalent.
+
+```python
+# tests/mock_server/__init__.py
+monkeypatch.setattr(config, "WICKES_URL", httpserver.url_for("/wickes"))
+```
+
+---
+
+## 3. Troubleshooting and Refresh
+If a crawler test fails due to UI drift or missing data:
+1.  Verify the keyword in `tests/crawler.py`.
+2.  Re-run the **Capture Command** mentioned above to refresh the local HTML fixture.
+3.  Update the expected paths in `tests/test_<crawler>_crawler.py` if the site structure has changed.

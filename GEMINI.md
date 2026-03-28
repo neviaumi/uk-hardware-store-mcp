@@ -42,18 +42,6 @@ To start the application in production mode (runs on port 8081):
 bash ./scripts/start.sh --prod
 ```
 
-## Testing
-To run code formatting checks and linting rules (via Ruff):
-```bash
-bash ./scripts/test.sh
-```
-
-**Testing Framework**: For executing the actual test suite, this repository utilizes **`uv run pytest`**. To run all unit and integration tests defined in the `tests/` directory, ensure you execute:
-```bash
-uv run pytest
-```
-
-### Mocking and Test Generation
-All new test generation for HTTP-based interactions **MUST** utilize `pytest-httpserver` for mock setups.
-- **Reference Patterns**: Consult `@tests/mock_server` for established mock server configurations and HTML fixture usage.
-- **Exceptions**: Direct MCP server integration tests (e.g., `tests/test_mcp_product_search.py`) are exempted from this requirement as they interact with the server via `stdio` rather than HTTP.
+### Comprehensive Testing Protocols
+For all instructions on quality standards, linting, mock data capture, and pytest implementation, consult the consolidated testing rules:
+- **[Testing Rules](file:///Users/david/apps/uk-hardware-store-mcp/.agents/rules/testing.md)**: Standardized procedures for all testing activities and mock server integration.
