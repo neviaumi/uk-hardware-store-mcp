@@ -1,3 +1,4 @@
 HOMEBASE_URL = "https://www.homebase.co.uk/en-uk"
 DIY_DOT_COM_URL = "https://www.diy.com"
 WICKES_URL = "https://www.wickes.co.uk"
+SCREWFIX_URL = "https://www.screwfix.com"

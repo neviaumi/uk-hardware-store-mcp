@@ -29,4 +29,9 @@ def mock_server(httpserver: httpserver.HTTPServer, monkeypatch):
         "WICKES_URL",
         httpserver.url_for("/wickes"),
     )
+    monkeypatch.setattr(
+        config,
+        "SCREWFIX_URL",
+        httpserver.url_for("/screwfix"),
+    )
     return httpserver
