@@ -18,9 +18,9 @@ def clean_html(html):
 def clean_text(text: list[str], separator: str = " ") -> str:
     if not text:
         return ""
-    return separator.join([
-        string.strip() for string in text if len(string.strip()) > 0
-    ])
+    return separator.join(
+        [string.strip() for string in text if len(string.strip()) > 0]
+    )
 
 
 def remove_spaces(text: str) -> str:

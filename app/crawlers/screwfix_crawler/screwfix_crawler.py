@@ -27,9 +27,9 @@ async def product_detail(url: str) -> ProductDetailResponse:
     bulk_saves = clean_html(selector.css("[data-qaid='bulk-save-table']").get())
 
     price_parts = selector.css("[data-qaid='pdp-price'] *::text").getall()
-    price = "".join([
-        p.strip() for p in price_parts if p.strip() and "inc" not in p.lower()
-    ])
+    price = "".join(
+        [p.strip() for p in price_parts if p.strip() and "inc" not in p.lower()]
+    )
 
     return {
         "title": remove_spaces(
@@ -77,12 +77,14 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
 
         description = clean_html(product.css("[data-qaid='bullets']").get())
 
-        results.append({
-            "title": remove_spaces(title) if title else "",
-            "price": price or "",
-            "url": f"{config.SCREWFIX_URL}{product_url}" if product_url else "",
-            "promo": promo_message_ctx if promo_message_ctx else bulk_saves_ctx,
-            "description": description or "",
-        })
+        results.append(
+            {
+                "title": remove_spaces(title) if title else "",
+                "price": price or "",
+                "url": f"{config.SCREWFIX_URL}{product_url}" if product_url else "",
+                "promo": promo_message_ctx if promo_message_ctx else bulk_saves_ctx,
+                "description": description or "",
+            }
+        )
 
     return results

@@ -1,3 +1,4 @@
+import json
 import os
 
 import pytest
@@ -5,11 +6,19 @@ import pytest_httpserver.httpserver as httpserver
 
 import app.config as config
 
+CURRENT_DIR = os.path.dirname(__file__)
+
 
 def mock_response_data(fileName: str):
-    path = os.path.join(os.path.dirname(__file__), fileName)
+    path = os.path.join(CURRENT_DIR, fileName)
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
+
+
+def mock_response_json(fileName: str):
+    path = os.path.join(CURRENT_DIR, fileName)
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 @pytest.fixture
@@ -33,5 +42,10 @@ def mock_server(httpserver: httpserver.HTTPServer, monkeypatch):
         config,
         "SCREWFIX_URL",
         httpserver.url_for("/screwfix"),
+    )
+    monkeypatch.setattr(
+        config,
+        "TOOLSTATION_URL",
+        httpserver.url_for("/toolstation"),
     )
     return httpserver

@@ -1,12 +1,13 @@
-from mcp.server.fastmcp import FastMCP
-import mcp.server.fastmcp.prompts as prompts
-import app.crawlers.diy_dot_com_crawler as diy_dot_com_crawler
-import app.crawlers.toolstation_crawler as toolstation_crawler
-import app.crawlers.wickes_crawler as wickes_crawler
-import app.crawlers.screwfix_crawler as screwfix_crawler
-import app.crawlers.homebase_crawler.homebase_crawler as homebase_crawler
 import json
 
+import mcp.server.fastmcp.prompts as prompts
+from mcp.server.fastmcp import FastMCP
+
+import app.crawlers.diy_dot_com_crawler as diy_dot_com_crawler
+import app.crawlers.homebase_crawler.homebase_crawler as homebase_crawler
+import app.crawlers.screwfix_crawler as screwfix_crawler
+import app.crawlers.toolstation_crawler as toolstation_crawler
+import app.crawlers.wickes_crawler as wickes_crawler
 
 mcp = FastMCP("Hardware Store", streamable_http_path="/")
 
@@ -118,6 +119,35 @@ async def get_product_detail_on_diy_dot_com(product_url: str) -> str:
     """
 
     result = await diy_dot_com_crawler.product_detail(product_url)
+    return json.dumps(result)
+
+
+@mcp.tool(
+    "get_product_detail_on_toolstation",
+    "Retrieve detailed product information from toolstation.com for a specific product URL.",
+)
+async def get_product_detail_on_toolstation(product_url: str) -> str:
+    """Retrieve detailed product information from toolstation.com for a specific product URL.
+
+    Args:
+        product_url (str): The relative product URL (e.g., `/product/hammer`).
+
+    Returns:
+        str: A JSON-encoded object containing the product's detailed information:
+                - "title" (str): The product name.
+                - "price" (str): The price of the product as a string.
+                - "detail" (str): Cleaned HTML content describing the product.
+                - "promo" (str): The promotional text for the product, if any.
+
+    Example Result:
+        {
+            "title": "Hammer",
+            "price": "£9.99",
+            "detail": "<div><h1>Hammer Details</h1><p>Durable and reliable design.</p></div>"
+        }
+    """
+
+    result = await toolstation_crawler.product_detail(product_url)
     return json.dumps(result)
 
 
