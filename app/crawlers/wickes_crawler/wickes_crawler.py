@@ -1,10 +1,11 @@
-from typing import TypedDict
 import urllib.parse
+from typing import TypedDict
+
 from parsel import Selector
 
 import app.config as config
 import app.crawlers.http_client as http_client
-from app.crawlers.utils import clean_html
+from app.crawlers.utils import clean_html, remove_spaces
 
 
 class ProductDetailResponse(TypedDict):
@@ -21,7 +22,9 @@ async def product_detail(url: str) -> ProductDetailResponse:
 
     selector = Selector(text=response.text)
 
-    title = selector.css("title::text").get()
+    raw_title = selector.css("title::text").get()
+    title = remove_spaces(raw_title.split("|")[0].strip())
+
     price = selector.css(".main-price__value::text").get()
     description = selector.css(".product-main-info__description::text").get()
 
@@ -57,13 +60,11 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         title = product.css("a::attr(title)").get()
         price = product.css(".product-card__price-value::text").get()
 
-        results.append(
-            {
-                "title": title.strip() if title else "",
-                "price": price.strip() if price else "",
-                "url": f"{config.WICKES_URL}{product_url}" if product_url else "",
-                "promo": promo.strip() if promo and "for" in promo else None,
-            }
-        )
+        results.append({
+            "title": title.strip() if title else "",
+            "price": price.strip() if price else "",
+            "url": f"{config.WICKES_URL}{product_url}" if product_url else "",
+            "promo": promo.strip() if promo and "for" in promo else None,
+        })
 
     return results

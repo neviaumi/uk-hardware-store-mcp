@@ -5,7 +5,7 @@ from parsel import Selector
 
 import app.config as config
 import app.crawlers.http_client as http_client
-from app.crawlers.utils import clean_html
+from app.crawlers.utils import clean_html, remove_spaces
 
 
 class ProductDetailResponse(TypedDict):
@@ -22,7 +22,9 @@ async def product_detail(url: str) -> ProductDetailResponse:
     selector = Selector(text=response.text)
 
     return {
-        "title": selector.css("[data-testid='product-name']::text").get() or "",
+        "title": remove_spaces(
+            selector.css("[data-testid='product-name']::text").get() or ""
+        ),
         "price": selector.css("[data-testid='product-price']::text").get() or "",
         "detail": clean_html(selector.css("#product-details").get()),
         "promo": selector.xpath(
@@ -54,13 +56,11 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         price = product.css("[data-testid='product-price']::text").get() or ""
         promo = product.css("[data-testid='promotion-msg']::text").get()
 
-        results.append(
-            {
-                "title": title,
-                "price": price,
-                "url": f"{config.DIY_DOT_COM_URL}{product_url}" if product_url else "",
-                "promo": promo,
-            }
-        )
+        results.append({
+            "title": remove_spaces(title),
+            "price": price,
+            "url": f"{config.DIY_DOT_COM_URL}{product_url}" if product_url else "",
+            "promo": promo,
+        })
 
     return results

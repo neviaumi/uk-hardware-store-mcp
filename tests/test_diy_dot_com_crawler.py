@@ -13,11 +13,15 @@ async def test_product_search(mock_server):
     )
     results = await diy_dot_com_crawler.product_search(TEST_SEARCH_KEYWORD)
     assert isinstance(results, list)
-    assert len(results) > 0
-    for item in results:
-        assert item["title"]
-        assert item["price"]
-        assert item["url"].startswith(mock_server.url_for("/b&q/"))
+    assert len(results) == 48
+    first_item = results[0]
+    assert (
+        first_item["title"]
+        == "M8 x 12mm Hex Set Screws Fully Threaded Hex Bolt Stainless Steel A2 DIN 933 Pack of 10"
+    )
+    assert first_item["price"] == "£6.09"
+    assert first_item["url"].startswith(mock_server.url_for("/b&q/"))
+    assert first_item["promo"] is None
 
 
 async def test_product_detail(mock_server):
@@ -27,7 +31,10 @@ async def test_product_detail(mock_server):
     )
     url = mock_server.url_for(path)
     result = await diy_dot_com_crawler.product_detail(url)
-    assert result["title"]
-    assert result["price"]
-    assert result["detail"]
+    assert (
+        result["title"]
+        == "M8 x 60mm Hex Set Screws Fully Threaded Hex Bolt Stainless Steel A2 DIN 933 Pack of 20"
+    )
+    assert result["price"] == "£18.49"
+    assert "60mm" in result["detail"]
     assert result["promo"] is None

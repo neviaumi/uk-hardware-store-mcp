@@ -13,11 +13,11 @@ async def test_product_search(mock_server):
     )
     results = await wickes_crawler.product_search(TEST_SEARCH_KEYWORD)
     assert isinstance(results, list)
-    assert len(results) > 0
-    for item in results:
-        assert item["title"]
-        assert item["price"]
-        assert item["url"].startswith(mock_server.url_for("/wickes"))
+    assert len(results) == 30
+    first_item = results[0]
+    assert first_item["title"] == "Rawlplug RBL2 RAWLBOLT with Loose Bolt - M6 x 70mm"
+    assert first_item["price"] == "£5.50"
+    assert first_item["url"].startswith(mock_server.url_for("/wickes"))
 
 
 async def test_product_detail(mock_server):
@@ -27,9 +27,8 @@ async def test_product_detail(mock_server):
     )
     url = mock_server.url_for(path)
     result = await wickes_crawler.product_detail(url)
-    assert result["title"]
-    assert result["price"]
-    assert result["description"]
-    assert result["detail"]
-    # Check if promo exists or not based on captured HTML (usually Rawlbolts don't have promos in this context)
+    assert result["title"] == "Rawlplug RBL2 RAWLBOLT with Loose Bolt - M6 x 70mm"
+    assert result["price"] == "£5.50"
+    assert "Rawlplug RBL2 RAWLBOLT" in result["description"]
+    assert "Wide range of diameters (M6-M20)" in result["detail"]
     assert "promo" in result
