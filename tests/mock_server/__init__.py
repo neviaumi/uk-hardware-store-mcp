@@ -48,4 +48,9 @@ def mock_server(httpserver: httpserver.HTTPServer, monkeypatch):
         "TOOLSTATION_URL",
         httpserver.url_for("/toolstation"),
     )
+    monkeypatch.setattr(
+        config,
+        "THE_RANGE_URL",
+        httpserver.url_for("/the-range"),
+    )
     return httpserver

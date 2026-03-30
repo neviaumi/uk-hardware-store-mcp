@@ -56,11 +56,13 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         price = product.css("[data-testid='product-price']::text").get() or ""
         promo = product.css("[data-testid='promotion-msg']::text").get()
 
-        results.append({
-            "title": remove_spaces(title),
-            "price": price,
-            "url": f"{config.DIY_DOT_COM_URL}{product_url}" if product_url else "",
-            "promo": promo,
-        })
+        results.append(
+            {
+                "title": remove_spaces(title),
+                "price": price,
+                "url": f"{config.DIY_DOT_COM_URL}{product_url}" if product_url else "",
+                "promo": promo,
+            }
+        )
 
     return results
