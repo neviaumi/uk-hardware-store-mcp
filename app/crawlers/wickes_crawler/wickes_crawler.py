@@ -60,11 +60,13 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         title = product.css("a::attr(title)").get()
         price = product.css(".product-card__price-value::text").get()
 
-        results.append({
-            "title": title.strip() if title else "",
-            "price": price.strip() if price else "",
-            "url": f"{config.WICKES_URL}{product_url}" if product_url else "",
-            "promo": promo.strip() if promo and "for" in promo else None,
-        })
+        results.append(
+            {
+                "title": title.strip() if title else "",
+                "price": price.strip() if price else "",
+                "url": f"{config.WICKES_URL}{product_url}" if product_url else "",
+                "promo": promo.strip() if promo and "for" in promo else None,
+            }
+        )
 
     return results

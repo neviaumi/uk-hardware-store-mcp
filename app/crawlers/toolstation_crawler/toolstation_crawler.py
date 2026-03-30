@@ -70,13 +70,15 @@ class ProductSearchResponse(TypedDict):
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
-    query = urllib.parse.urlencode({
-        "request_type": "search",
-        "q": keyword,
-        "start": "0",
-        "search_type": "keyword",
-        "skipCache": "true",
-    })
+    query = urllib.parse.urlencode(
+        {
+            "request_type": "search",
+            "q": keyword,
+            "start": "0",
+            "search_type": "keyword",
+            "skipCache": "true",
+        }
+    )
     url = f"{TOOLSTATION_API}/search/crs?{query}"
 
     async with http_client.create_client() as client:
@@ -94,13 +96,15 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         product_url = product.get("url", "")
         promo = product.get("weboverlaytext", "")
 
-        results.append({
-            "title": title.strip() if title else "",
-            "price": f"£{price}" if price else "",
-            "url": f"{config.TOOLSTATION_URL}{urllib.parse.urlparse(product_url.strip()).path}"
-            if product_url
-            else "",
-            "promo": promo if promo and "for" in promo else None,
-        })
+        results.append(
+            {
+                "title": title.strip() if title else "",
+                "price": f"£{price}" if price else "",
+                "url": f"{config.TOOLSTATION_URL}{urllib.parse.urlparse(product_url.strip()).path}"
+                if product_url
+                else "",
+                "promo": promo if promo and "for" in promo else None,
+            }
+        )
 
     return results
