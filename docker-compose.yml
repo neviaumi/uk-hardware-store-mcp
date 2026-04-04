@@ -1,9 +1,10 @@
 services:
   app:
+    restart: unless-stopped
     build:
       context: ./
       dockerfile: Dockerfile
     command: ./scripts/docker/start.sh
     entrypoint: /bin/sh
     ports:
-      - "8081:8080"
+      - "8082:8080"
