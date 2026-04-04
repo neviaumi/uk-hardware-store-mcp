@@ -9,7 +9,7 @@ import app.crawlers.screwfix_crawler as screwfix_crawler
 import app.crawlers.toolstation_crawler as toolstation_crawler
 import app.crawlers.wickes_crawler as wickes_crawler
 
-mcp = FastMCP("Hardware Store", streamable_http_path="/")
+mcp = FastMCP("Hardware Store", streamable_http_path="/", host="0.0.0.0")
 
 
 @mcp.prompt("Hardware store staff", "helpful assistant for a hardware store")
