@@ -48,16 +48,9 @@ async def test_search_products(mcp_client_session, provider):
     )
 
     assert tool_result.isError is False, f"Tool call for {provider} should not error"
-    assert len(tool_result.content) > 0, (
-        f"Tool call response for {provider} should not be empty"
-    )
+    response = tool_result.structuredContent.get("result", [])
+    assert len(response) > 0, f"Tool call response for {provider} should not be empty"
 
-    # Note: FastMCP automatically handles Pydantic models, returning them as JSON lists/objects in content[0].text
-    response = json.loads(tool_result.content[0].text)
-    assert isinstance(response, list), f"Response for {provider} should be a list"
-    assert len(response) > 0, (
-        f"{TEST_SEARCH_KEYWORD} on {provider} should return results"
-    )
     # Check that each product has expected fields
     for product in response:
         assert "title" in product

@@ -85,7 +85,7 @@ ProductSearchResponse = list[
 
 
 @mcp.tool("search_products", "Search for products on multiple providers.")
-async def search_products(request: ProductsSearchRequest) -> str:
+async def search_products(request: ProductsSearchRequest) -> ProductSearchResponse:
     """Search for products on multiple providers.
 
     Args:
@@ -109,7 +109,7 @@ async def search_products(request: ProductsSearchRequest) -> str:
         case _:
             result = []
 
-    return json.dumps([r.model_dump() for r in result] if result else [])
+    return result
 
 
 @mcp.tool(
