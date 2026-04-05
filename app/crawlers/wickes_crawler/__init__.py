@@ -1,4 +1,5 @@
 from .wickes_crawler import (
+    SOURCE_IDENTIFIER,
     ProductDetailResponse,
     ProductSearchResponse,
     product_detail,
@@ -6,6 +7,7 @@ from .wickes_crawler import (
 )
 
 __all__ = [
+    "SOURCE_IDENTIFIER",
     "ProductDetailResponse",
     "ProductSearchResponse",
     "product_detail",

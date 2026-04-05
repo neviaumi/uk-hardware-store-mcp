@@ -44,7 +44,7 @@ async def test_provider(mcp_client_session, provider):
     # Call the search_products tool with the ProductsSearchRequest payload
     tool_result = await mcp_client_session.call_tool(
         "search_products",
-        {"request": {"keyword": TEST_SEARCH_KEYWORD, "provider": provider.value}},
+        {"request": {"keyword": TEST_SEARCH_KEYWORD}, "provider": provider.value},
     )
 
     assert tool_result.isError is False, f"Tool call for {provider} should not error"
@@ -60,7 +60,7 @@ async def test_provider(mcp_client_session, provider):
     first_product = response[0]
     tool_result = await mcp_client_session.call_tool(
         "get_product_detail",
-        {"request": {"provider": provider.value, "product_url": first_product["url"]}},
+        {"request": {"product_url": first_product["url"]}, "provider": provider.value},
     )
     assert tool_result.isError is False, f"Tool call for {provider} should not error"
     response = tool_result.structuredContent.get("result", {})
@@ -70,7 +70,7 @@ async def test_provider(mcp_client_session, provider):
 async def test_unsupported_provider(mcp_client_session):
     tool_result = await mcp_client_session.call_tool(
         "search_products",
-        {"request": {"keyword": TEST_SEARCH_KEYWORD, "provider": "unsupported"}},
+        {"request": {"keyword": TEST_SEARCH_KEYWORD}, "provider": "unsupported"},
     )
     assert tool_result.isError is True, (
         "Tool call for unsupported provider should error"

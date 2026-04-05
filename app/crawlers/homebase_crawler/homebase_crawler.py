@@ -8,12 +8,12 @@ import app.config as config
 import app.crawlers.http_client as http_client
 from app.crawlers.utils import clean_html, clean_text
 
-_source = "Homebase"
+SOURCE_IDENTIFIER = "Homebase"
 
 
 class ProductDetailResponse(BaseModel):
-    source: Literal[_source] = Field(
-        description="The source of the product.", default=_source
+    source: Literal[SOURCE_IDENTIFIER] = Field(
+        description="The source of the product.", default=SOURCE_IDENTIFIER
     )
     title: str = Field(description="The full commercial name of the product.")
     price: str = Field(
@@ -63,8 +63,8 @@ async def product_detail(url: str) -> ProductDetailResponse:
 
 
 class ProductSearchResponse(BaseModel):
-    source: Literal[_source] = Field(
-        description="The source of the search result.", default=_source
+    source: Literal[SOURCE_IDENTIFIER] = Field(
+        description="The source of the search result.", default=SOURCE_IDENTIFIER
     )
     title: str = Field(
         description="The commercial name of the product as shown in search results."

@@ -14,11 +14,11 @@ import app.crawlers.wickes_crawler as wickes_crawler
 
 
 class Provider(str, Enum):
-    DIY_DOT_COM = "B&Q"
-    HOMEBASE = "Homebase"
-    SCREWFIX = "Screwfix"
-    TOOLSTATION = "Toolstation"
-    WICKES = "Wickes"
+    DIY_DOT_COM = diy_dot_com_crawler.SOURCE_IDENTIFIER
+    HOMEBASE = homebase_crawler.SOURCE_IDENTIFIER
+    SCREWFIX = screwfix_crawler.SOURCE_IDENTIFIER
+    TOOLSTATION = toolstation_crawler.SOURCE_IDENTIFIER
+    WICKES = wickes_crawler.SOURCE_IDENTIFIER
 
 
 mcp = FastMCP("Hardware Store", streamable_http_path="/", host="0.0.0.0")
@@ -68,9 +68,6 @@ Wait for the user to describe their project before offering specific product lin
 
 
 class ProductDetailRequest(BaseModel):
-    provider: Provider = Field(
-        description="The UK hardware retailer to fetch details from (B&Q, Homebase, Screwfix, Toolstation, or Wickes)."
-    )
     product_url: str = Field(
         description="The absolute product URL (e.g., `https://www.diy.com/products/hammer-12345`)."
     )
@@ -87,10 +84,17 @@ ProductDetailResponse = Union[
 
 @mcp.tool(
     "get_product_detail",
-    "Fetch comprehensive product details (specifications, description, price) using a store URL from a specific provider.",
+    "Fetch comprehensive product details (specifications, description, price) using a store URL from a specific UK hardware retailer.",
 )
-async def get_product_detail(request: ProductDetailRequest) -> ProductDetailResponse:
-    match request.provider:
+async def get_product_detail(
+    provider: Provider = Field(
+        description="The UK hardware retailer to fetch details from (B&Q, Homebase, Screwfix, Toolstation, or Wickes)."
+    ),
+    request: ProductDetailRequest = Field(
+        description="The request containing the product URL."
+    ),
+) -> ProductDetailResponse:
+    match provider:
         case Provider.DIY_DOT_COM:
             result = await diy_dot_com_crawler.product_detail(request.product_url)
         case Provider.HOMEBASE:
@@ -102,7 +106,7 @@ async def get_product_detail(request: ProductDetailRequest) -> ProductDetailResp
         case Provider.WICKES:
             result = await wickes_crawler.product_detail(request.product_url)
         case _:
-            raise ToolError(f"Provider {request.provider} is not supported.")
+            raise ToolError(f"Provider {provider} is not supported.")
 
     return result
 
@@ -110,9 +114,6 @@ async def get_product_detail(request: ProductDetailRequest) -> ProductDetailResp
 class ProductsSearchRequest(BaseModel):
     keyword: str = Field(
         description="The search term (e.g., 'M6 Hex Bolt', 'Combi Drill') to query the catalog."
-    )
-    provider: Provider = Field(
-        description="The UK hardware retailer to search on (B&Q, Homebase, Screwfix, Toolstation, or Wickes)."
     )
 
 
@@ -131,17 +132,25 @@ ProductSearchResponse = list[
     "search_products",
     "Search for products on a specific UK hardware retailer's catalog.",
 )
-async def search_products(request: ProductsSearchRequest) -> ProductSearchResponse:
+async def search_products(
+    provider: Provider = Field(
+        description="The UK hardware retailer to search on (B&Q, Homebase, Screwfix, Toolstation, or Wickes)."
+    ),
+    request: ProductsSearchRequest = Field(
+        description="The search request containing the keyword."
+    ),
+) -> ProductSearchResponse:
     """Search for products on the specified retailer's website.
 
     Args:
-        request (ProductsSearchRequest): The search request containing the keyword and provider.
+        provider (Provider): The hardware retailer to search on.
+        request (ProductsSearchRequest): The search request containing the keyword.
 
     Returns:
         ProductSearchResponse: A list of objects containing product name, price, URL, and thumbnail.
 
     """
-    match request.provider:
+    match provider:
         case Provider.DIY_DOT_COM:
             result = await diy_dot_com_crawler.product_search(request.keyword)
         case Provider.HOMEBASE:
@@ -153,6 +162,6 @@ async def search_products(request: ProductsSearchRequest) -> ProductSearchRespon
         case Provider.WICKES:
             result = await wickes_crawler.product_search(request.keyword)
         case _:
-            raise ToolError(f"Provider {request.provider} is not supported.")
+            raise ToolError(f"Provider {provider} is not supported.")
 
     return result
