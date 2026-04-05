@@ -3,6 +3,7 @@ from typing import Union
 
 import mcp.server.fastmcp.prompts as prompts
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.exceptions import ToolError
 from pydantic import BaseModel, Field
 
 import app.crawlers.diy_dot_com_crawler as diy_dot_com_crawler
@@ -100,7 +101,7 @@ async def get_product_detail(request: ProductDetailRequest) -> ProductDetailResp
         case Provider.WICKES:
             result = await wickes_crawler.product_detail(request.product_url)
         case _:
-            result = {}
+            raise ToolError(f"Provider {request.provider} is not supported.")
 
     return result
 
@@ -144,6 +145,6 @@ async def search_products(request: ProductsSearchRequest) -> ProductSearchRespon
         case Provider.WICKES:
             result = await wickes_crawler.product_search(request.keyword)
         case _:
-            result = []
+            raise ToolError(f"Provider {request.provider} is not supported.")
 
     return result

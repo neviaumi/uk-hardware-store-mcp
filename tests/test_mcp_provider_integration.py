@@ -65,3 +65,25 @@ async def test_provider(mcp_client_session, provider):
     assert tool_result.isError is False, f"Tool call for {provider} should not error"
     response = tool_result.structuredContent.get("result", {})
     assert "title" in response
+
+
+async def test_unsupported_provider(mcp_client_session):
+    tool_result = await mcp_client_session.call_tool(
+        "search_products",
+        {"request": {"keyword": TEST_SEARCH_KEYWORD, "provider": "unsupported"}},
+    )
+    assert tool_result.isError is True, (
+        "Tool call for unsupported provider should error"
+    )
+    tool_result = await mcp_client_session.call_tool(
+        "get_product_detail",
+        {
+            "request": {
+                "provider": "unsupported",
+                "product_url": "https://www.diy.com/products/hammer",
+            }
+        },
+    )
+    assert tool_result.isError is True, (
+        "Tool call for unsupported provider should error"
+    )
