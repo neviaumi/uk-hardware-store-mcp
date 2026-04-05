@@ -39,7 +39,7 @@ async def mcp_client_session(mcp_server_config):
 
 @pytest.mark.parametrize("provider", list(Provider))
 @skip_if_ci
-async def test_search_products(mcp_client_session, provider):
+async def test_provider(mcp_client_session, provider):
     """Test the unified search_products tool across all providers."""
     # Call the search_products tool with the ProductsSearchRequest payload
     tool_result = await mcp_client_session.call_tool(
@@ -56,3 +56,12 @@ async def test_search_products(mcp_client_session, provider):
         assert "title" in product
         assert "price" in product
         assert "url" in product
+
+    first_product = response[0]
+    tool_result = await mcp_client_session.call_tool(
+        "get_product_detail",
+        {"request": {"provider": provider.value, "product_url": first_product["url"]}},
+    )
+    assert tool_result.isError is False, f"Tool call for {provider} should not error"
+    response = tool_result.structuredContent.get("result", {})
+    assert "title" in response

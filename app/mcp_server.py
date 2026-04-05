@@ -1,4 +1,3 @@
-import json
 from enum import Enum
 from typing import Union
 
@@ -14,11 +13,11 @@ import app.crawlers.wickes_crawler as wickes_crawler
 
 
 class Provider(str, Enum):
-    DIY_DOT_COM = "diy.com"
-    HOMEBASE = "homebase.co.uk"
-    SCREWFIX = "screwfix.com"
-    TOOLSTATION = "toolstation.com"
-    WICKES = "wickes.co.uk"
+    DIY_DOT_COM = "B&Q"
+    HOMEBASE = "Homebase"
+    SCREWFIX = "Screwfix"
+    TOOLSTATION = "Toolstation"
+    WICKES = "Wickes"
 
 
 mcp = FastMCP("Hardware Store", streamable_http_path="/", host="0.0.0.0")
@@ -68,6 +67,44 @@ Remember to get specific details about the customer's project before making reco
     ]
 
 
+class ProductDetailRequest(BaseModel):
+    provider: Provider = Field(description="The provider to search for products on.")
+    product_url: str = Field(
+        description="The absolute product URL (e.g., `https://www.diy.com/products/hammer`)."
+    )
+
+
+ProductDetailResponse = Union[
+    diy_dot_com_crawler.ProductDetailResponse,
+    homebase_crawler.ProductDetailResponse,
+    screwfix_crawler.ProductDetailResponse,
+    toolstation_crawler.ProductDetailResponse,
+    wickes_crawler.ProductDetailResponse,
+]
+
+
+@mcp.tool(
+    "get_product_detail",
+    "Retrieve detailed product information from a provider for a specific product URL.",
+)
+async def get_product_detail(request: ProductDetailRequest) -> ProductDetailResponse:
+    match request.provider:
+        case Provider.DIY_DOT_COM:
+            result = await diy_dot_com_crawler.product_detail(request.product_url)
+        case Provider.HOMEBASE:
+            result = await homebase_crawler.product_detail(request.product_url)
+        case Provider.SCREWFIX:
+            result = await screwfix_crawler.product_detail(request.product_url)
+        case Provider.TOOLSTATION:
+            result = await toolstation_crawler.product_detail(request.product_url)
+        case Provider.WICKES:
+            result = await wickes_crawler.product_detail(request.product_url)
+        case _:
+            result = {}
+
+    return result
+
+
 class ProductsSearchRequest(BaseModel):
     keyword: str = Field(description="The search term to query the product catalog.")
     provider: Provider = Field(description="The provider to search for products on.")
@@ -110,152 +147,3 @@ async def search_products(request: ProductsSearchRequest) -> ProductSearchRespon
             result = []
 
     return result
-
-
-@mcp.tool(
-    "get_product_detail_on_diy_dot_com",
-    "Retrieve detailed product information from diy.com for a specific product URL.",
-)
-async def get_product_detail_on_diy_dot_com(product_url: str) -> str:
-    """Retrieve detailed product information from diy.com for a specific product URL.
-
-    Args:
-        product_url (str): The relative product URL (e.g., `/product/hammer`).
-
-    Returns:
-        str: A JSON-encoded object containing the product's detailed information:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "detail" (str): Cleaned HTML content describing the product.
-                - "promo" (str): The promotional text for the product, if any.
-
-    Example Result:
-        {
-            "title": "Hammer",
-            "price": "£9.99",
-            "detail": "<div><h1>Hammer Details</h1><p>Durable and reliable design.</p></div>"
-        }
-    """
-
-    result = await diy_dot_com_crawler.product_detail(product_url)
-    return json.dumps(result)
-
-
-@mcp.tool(
-    "get_product_detail_on_toolstation",
-    "Retrieve detailed product information from toolstation.com for a specific product URL.",
-)
-async def get_product_detail_on_toolstation(product_url: str) -> str:
-    """Retrieve detailed product information from toolstation.com for a specific product URL.
-
-    Args:
-        product_url (str): The relative product URL (e.g., `/product/hammer`).
-
-    Returns:
-        str: A JSON-encoded object containing the product's detailed information:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "detail" (str): Cleaned HTML content describing the product.
-                - "promo" (str): The promotional text for the product, if any.
-
-    Example Result:
-        {
-            "title": "Hammer",
-            "price": "£9.99",
-            "detail": "<div><h1>Hammer Details</h1><p>Durable and reliable design.</p></div>"
-        }
-    """
-
-    result = await toolstation_crawler.product_detail(product_url)
-    return json.dumps(result)
-
-
-@mcp.tool(
-    "get_product_detail_on_wickes",
-    "Retrieve detailed product information from wickes.co.uk for a specific product URL.",
-)
-async def get_product_detail_on_wickes(product_url: str) -> str:
-    """Retrieve detailed product information from wickes.co.uk for a specific product URL.
-
-    Args:
-        product_url (str): The full product URL (e.g., `https://www.wickes.co.uk/product/hammer`).
-
-    Returns:
-        str: A JSON-encoded object containing the product's detailed information:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "detail" (str): Cleaned HTML content describing the product.
-                - "description" (str): Short description of the product.
-                - "promo" (str): The promotional text for the product, if any.
-
-    Example Result:
-        {
-            "title": "Hammer",
-            "price": "£9.99",
-            "detail": "<div><h1>Hammer Details</h1><p>Durable and reliable design.</p></div>",
-            "description": "A high-quality hammer for all your DIY needs."
-        }
-    """
-
-    result = await wickes_crawler.product_detail(product_url)
-    return json.dumps(result)
-
-
-@mcp.tool(
-    "get_product_detail_on_screwfix",
-    "Retrieve detailed product information from screwfix.com for a specific product URL.",
-)
-async def get_product_detail_on_screwfix(product_url: str) -> str:
-    """Retrieve detailed product information from screwfix.com for a specific product URL.
-
-    Args:
-        product_url (str): The full product URL (e.g., `https://www.screwfix.com/product/hammer`).
-
-    Returns:
-        str: A JSON-encoded object containing the product's detailed information:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "detail" (str): Cleaned HTML content describing the product.
-                - "description" (str): Short description of the product.
-                - "promo" (str): The promotional text for the product, if any.
-
-    Example Result:
-        {
-            "title": "Hammer",
-            "price": "£9.99",
-            "detail": "<div><h1>Hammer Details</h1><p>Durable and reliable design.</p></div>",
-            "description": "A high-quality hammer for all your DIY needs."
-        }
-    """
-
-    result = await screwfix_crawler.product_detail(product_url)
-    return json.dumps(result)
-
-
-@mcp.tool(
-    "get_product_detail_on_homebase",
-    "Retrieve detailed product information from homebase.co.uk for a specific product URL.",
-)
-async def get_product_detail_on_homebase(product_url: str) -> str:
-    """Retrieve detailed product information from homebase.co.uk for a specific product URL.
-
-    Args:
-        product_url (str): The full product URL (e.g., `https://www.homebase.co.uk/product/hammer`).
-
-    Returns:
-        str: A JSON-encoded object containing the product's detailed information:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "detail" (str): Cleaned HTML content describing the product.
-                - "promo" (str): The promotional text for the product, if any.
-
-    Example Result:
-        {
-            "title": "Hammer",
-            "price": "£9.99",
-            "detail": "<div><h1>Hammer Details</h1><p>Durable and reliable design.</p></div>"
-        }
-    """
-
-    result = await homebase_crawler.product_detail(product_url)
-    return json.dumps(result)
