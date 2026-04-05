@@ -85,6 +85,12 @@ ProductDetailResponse = Union[
 @mcp.tool(
     "get_product_detail",
     "Fetch comprehensive product details (specifications, description, price) using a store URL from a specific UK hardware retailer.",
+    annotations={
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
 )
 async def get_product_detail(
     provider: Provider = Field(
@@ -131,6 +137,12 @@ ProductSearchResponse = list[
 @mcp.tool(
     "search_products",
     "Search for products on a specific UK hardware retailer's catalog.",
+    annotations={
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
 )
 async def search_products(
     provider: Provider = Field(
