@@ -88,7 +88,7 @@ ProductDetailResponse = Union[
     annotations={
         "readOnlyHint": True,
         "destructiveHint": False,
-        "idempotentHint": True,
+        "idempotentHint": False,
         "openWorldHint": True,
     },
 )
@@ -140,7 +140,7 @@ ProductSearchResponse = list[
     annotations={
         "readOnlyHint": True,
         "destructiveHint": False,
-        "idempotentHint": True,
+        "idempotentHint": False,
         "openWorldHint": True,
     },
 )
