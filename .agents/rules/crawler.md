@@ -28,7 +28,9 @@ To maintain parity and prevent fingerprinting discrepancies across the codebase,
 
 Data parsing should strictly map to static schemas to easily catch changes in structure.
 
-- Enforce the use of **TypedDict**, **dataclasses**, or **Pydantic** models for all return values produced by a crawler (e.g., creating a standardized `ProductSearchResult` model).
+- Enforce the use of **Pydantic** models for all return values produced by a crawler (e.g., creating a standardized `ProductSearchResult` model).
+- All output models **MUST** include a `source` field indicating the retailer. This field should be defined as a `Literal` with a default value matching the provider name.
+- Crawler functions **MUST** return instantiated Pydantic models, not raw dictionaries.
 - Define formal type hints for all Request/Response cycles and payload parsing methods.
 
 ---

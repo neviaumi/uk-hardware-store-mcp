@@ -1,21 +1,34 @@
 import urllib.parse
-from typing import TypedDict
+from typing import Literal
 
 from parsel import Selector
+from pydantic import BaseModel, Field
 
 import app.config as config
 import app.crawlers.http_client as http_client
 from app.crawlers.utils import clean_html, clean_text, remove_spaces
 
+_source = "Toolstation"
 TOOLSTATION_API = f"{config.TOOLSTATION_URL}/api"
 
 
-class ProductDetailResponse(TypedDict):
-    title: str
-    price: str
-    detail: str
-    description: str
-    promo: str | None
+class ProductDetailResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the product.", default=_source
+    )
+    title: str = Field(description="The full commercial name of the product.")
+    price: str = Field(
+        description="The current retail price, including the currency symbol (e.g., £15.49)."
+    )
+    detail: str = Field(
+        description="Comprehensive technical specifications or item details in HTML format."
+    )
+    description: str = Field(
+        description="A brief text summary of the product's key features and benefits."
+    )
+    promo: str | None = Field(
+        description="Any active promotional offers or discounts associated with the product."
+    )
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
@@ -53,20 +66,31 @@ async def product_detail(url: str) -> ProductDetailResponse:
         selector.css("[data-testid='savings-badge-wrapper'] *::text").getall()
     )
 
-    return {
-        "title": title,
-        "price": price.strip(),
-        "detail": detail,
-        "description": description,
-        "promo": promo if promo else None,
-    }
+    return ProductDetailResponse(
+        title=title,
+        price=price.strip(),
+        detail=detail,
+        description=description,
+        promo=promo if promo else None,
+    )
 
 
-class ProductSearchResponse(TypedDict):
-    title: str
-    price: str
-    url: str
-    promo: str | None
+class ProductSearchResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the search result.", default=_source
+    )
+    title: str = Field(
+        description="The commercial name of the product as shown in search results."
+    )
+    price: str = Field(
+        description="The current retail price, including the currency symbol."
+    )
+    url: str = Field(
+        description="The absolute URL leading to the product's detail page."
+    )
+    promo: str | None = Field(
+        description="Any active promotional offers or discounts associated with the product."
+    )
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
@@ -97,14 +121,14 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         promo = product.get("weboverlaytext", "")
 
         results.append(
-            {
-                "title": title.strip() if title else "",
-                "price": f"£{price}" if price else "",
-                "url": f"{config.TOOLSTATION_URL}{urllib.parse.urlparse(product_url.strip()).path}"
+            ProductSearchResponse(
+                title=title.strip() if title else "",
+                price=f"£{price}" if price else "",
+                url=f"{config.TOOLSTATION_URL}{urllib.parse.urlparse(product_url.strip()).path}"
                 if product_url
                 else "",
-                "promo": promo if promo and "for" in promo else None,
-            }
+                promo=promo if promo and "for" in promo else None,
+            )
         )
 
     return results

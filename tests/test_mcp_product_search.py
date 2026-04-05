@@ -8,6 +8,7 @@ from mcp.client.stdio import (
     stdio_client,
 )
 
+from app.mcp_server import Provider
 from tests import skip_if_ci
 from tests.crawler import TEST_SEARCH_KEYWORD
 
@@ -36,71 +37,29 @@ async def mcp_client_session(mcp_server_config):
             yield session
 
 
+@pytest.mark.parametrize("provider", list(Provider))
 @skip_if_ci
-async def test_search_products_on_diy_dot_com(mcp_client_session):
-    # Call a tool
+async def test_search_products(mcp_client_session, provider):
+    """Test the unified search_products tool across all providers."""
+    # Call the search_products tool with the ProductsSearchRequest payload
     tool_result = await mcp_client_session.call_tool(
-        "search_products_on_diy_dot_com", {"keyword": TEST_SEARCH_KEYWORD}
+        "search_products",
+        {"request": {"keyword": TEST_SEARCH_KEYWORD, "provider": provider.value}},
     )
-    assert tool_result.isError is False, "Tool call should no Error"
+
+    assert tool_result.isError is False, f"Tool call for {provider} should not error"
     assert len(tool_result.content) > 0, (
-        "Tool call response content should not be empty"
+        f"Tool call response for {provider} should not be empty"
     )
+
+    # Note: FastMCP automatically handles Pydantic models, returning them as JSON lists/objects in content[0].text
     response = json.loads(tool_result.content[0].text)
-    assert len(response) > 0, f"${TEST_SEARCH_KEYWORD} should always return something"
-
-
-@skip_if_ci
-async def test_search_products_on_toolstation(mcp_client_session):
-    # Call a tool
-    tool_result = await mcp_client_session.call_tool(
-        "search_products_on_toolstation", {"keyword": TEST_SEARCH_KEYWORD}
+    assert isinstance(response, list), f"Response for {provider} should be a list"
+    assert len(response) > 0, (
+        f"{TEST_SEARCH_KEYWORD} on {provider} should return results"
     )
-    assert tool_result.isError is False, "Tool call should no Error"
-    assert len(tool_result.content) > 0, (
-        "Tool call response content should not be empty"
-    )
-    response = json.loads(tool_result.content[0].text)
-    assert len(response) > 0, f"${TEST_SEARCH_KEYWORD} should always return something"
-
-
-@skip_if_ci
-async def test_search_products_on_wickes(mcp_client_session):
-    # Call a tool
-    tool_result = await mcp_client_session.call_tool(
-        "search_products_on_wickes", {"keyword": TEST_SEARCH_KEYWORD}
-    )
-    assert tool_result.isError is False, "Tool call should no Error"
-    assert len(tool_result.content) > 0, (
-        "Tool call response content should not be empty"
-    )
-    response = json.loads(tool_result.content[0].text)
-    assert len(response) > 0, f"${TEST_SEARCH_KEYWORD} should always return something"
-
-
-@skip_if_ci
-async def test_search_products_on_screwfix(mcp_client_session):
-    # Call a tool
-    tool_result = await mcp_client_session.call_tool(
-        "search_products_on_screwfix", {"keyword": TEST_SEARCH_KEYWORD}
-    )
-    assert tool_result.isError is False, "Tool call should no Error"
-    assert len(tool_result.content) > 0, (
-        "Tool call response content should not be empty"
-    )
-    response = json.loads(tool_result.content[0].text)
-    assert len(response) > 0, f"${TEST_SEARCH_KEYWORD} should always return something"
-
-
-@skip_if_ci
-async def test_search_products_on_homebase(mcp_client_session):
-    # Call a tool
-    tool_result = await mcp_client_session.call_tool(
-        "search_products_on_homebase", {"keyword": TEST_SEARCH_KEYWORD}
-    )
-    assert tool_result.isError is False, "Tool call should no Error"
-    assert len(tool_result.content) > 0, (
-        "Tool call response content should not be empty"
-    )
-    response = json.loads(tool_result.content[0].text)
-    assert len(response) > 0, f"${TEST_SEARCH_KEYWORD} should always return something"
+    # Check that each product has expected fields
+    for product in response:
+        assert "title" in product
+        assert "price" in product
+        assert "url" in product

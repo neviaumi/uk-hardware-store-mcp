@@ -1,13 +1,25 @@
 import json
+from enum import Enum
+from typing import Union
 
 import mcp.server.fastmcp.prompts as prompts
 from mcp.server.fastmcp import FastMCP
+from pydantic import BaseModel, Field
 
 import app.crawlers.diy_dot_com_crawler as diy_dot_com_crawler
 import app.crawlers.homebase_crawler.homebase_crawler as homebase_crawler
 import app.crawlers.screwfix_crawler as screwfix_crawler
 import app.crawlers.toolstation_crawler as toolstation_crawler
 import app.crawlers.wickes_crawler as wickes_crawler
+
+
+class Provider(str, Enum):
+    DIY_DOT_COM = "diy.com"
+    HOMEBASE = "homebase.co.uk"
+    SCREWFIX = "screwfix.com"
+    TOOLSTATION = "toolstation.com"
+    WICKES = "wickes.co.uk"
+
 
 mcp = FastMCP("Hardware Store", streamable_http_path="/", host="0.0.0.0")
 
@@ -56,41 +68,48 @@ Remember to get specific details about the customer's project before making reco
     ]
 
 
-@mcp.tool(
-    "search_products_on_diy_dot_com",
-    "Search for products on diy.com based on a provided keyword.",
-)
-async def search_products_on_diy_dot_com(keyword: str) -> str:
-    """Search for products on diy.com based on a provided keyword.
+class ProductsSearchRequest(BaseModel):
+    keyword: str = Field(description="The search term to query the product catalog.")
+    provider: Provider = Field(description="The provider to search for products on.")
+
+
+ProductSearchResponse = list[
+    Union[
+        diy_dot_com_crawler.ProductSearchResponse,
+        homebase_crawler.ProductSearchResponse,
+        screwfix_crawler.ProductSearchResponse,
+        toolstation_crawler.ProductSearchResponse,
+        wickes_crawler.ProductSearchResponse,
+    ]
+]
+
+
+@mcp.tool("search_products", "Search for products on multiple providers.")
+async def search_products(request: ProductsSearchRequest) -> str:
+    """Search for products on multiple providers.
 
     Args:
-        keyword (str): The search term to query diy.com’s product catalog.
+        request (ProductsSearchRequest): The search request.
 
     Returns:
-        str: A JSON-encoded array of product data matching the given keyword.
-             Each product entry contains:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "url" (str): The full URL linking to the product's detail page.
-                - "promo" (str): The promotional text for the product, if any.
+        str: A JSON-encoded list of product search results from multiple providers.
 
-    Example Result:
-        [
-            {
-                "title": "Hammer",
-                "price": "£9.99",
-                "url": "https://www.diy.com/hammer"
-            },
-            {
-                "title": "Drill",
-                "price": "£49.99",
-                "url": "https://www.diy.com/drill"
-            }
-        ]
     """
-    result = await diy_dot_com_crawler.product_search(keyword)
+    match request.provider:
+        case Provider.DIY_DOT_COM:
+            result = await diy_dot_com_crawler.product_search(request.keyword)
+        case Provider.HOMEBASE:
+            result = await homebase_crawler.product_search(request.keyword)
+        case Provider.SCREWFIX:
+            result = await screwfix_crawler.product_search(request.keyword)
+        case Provider.TOOLSTATION:
+            result = await toolstation_crawler.product_search(request.keyword)
+        case Provider.WICKES:
+            result = await wickes_crawler.product_search(request.keyword)
+        case _:
+            result = []
 
-    return json.dumps(result)
+    return json.dumps([r.model_dump() for r in result] if result else [])
 
 
 @mcp.tool(
@@ -152,80 +171,6 @@ async def get_product_detail_on_toolstation(product_url: str) -> str:
 
 
 @mcp.tool(
-    "search_products_on_toolstation",
-    "Search for products on toolstation.com based on a provided keyword.",
-)
-async def search_products_on_toolstation(keyword: str) -> str:
-    """Search for products on toolstation.com based on a provided keyword.
-
-    Args:
-        keyword (str): The search term to query toolstation.com's product catalog.
-
-    Returns:
-        str: A JSON-encoded array of product data matching the given keyword.
-             Each product entry contains:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "url" (str): The full URL linking to the product's detail page.
-                - "promo" (str): The promotional text for the product, if any.
-
-    Example Result:
-        [
-            {
-                "title": "Hammer",
-                "price": "£9.99",
-                "url": "https://www.toolstation.com/hammer"
-            },
-            {
-                "title": "Drill",
-                "price": "£49.99",
-                "url": "https://www.toolstation.com/drill"
-            }
-        ]
-    """
-    result = await toolstation_crawler.product_search(keyword)
-
-    return json.dumps(result)
-
-
-@mcp.tool(
-    "search_products_on_wickes",
-    "Search for products on wickes.co.uk based on a provided keyword.",
-)
-async def search_products_on_wickes(keyword: str) -> str:
-    """Search for products on wickes.co.uk based on a provided keyword.
-
-    Args:
-        keyword (str): The search term to query wickes.co.uk's product catalog.
-
-    Returns:
-        str: A JSON-encoded array of product data matching the given keyword.
-             Each product entry contains:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "url" (str): The full URL linking to the product's detail page.
-                - "promo" (str): The promotional text for the product, if any.
-
-    Example Result:
-        [
-            {
-                "title": "Hammer",
-                "price": "£9.99",
-                "url": "https://www.wickes.co.uk/hammer"
-            },
-            {
-                "title": "Drill",
-                "price": "£49.99",
-                "url": "https://www.wickes.co.uk/drill"
-            }
-        ]
-    """
-    result = await wickes_crawler.product_search(keyword)
-
-    return json.dumps(result)
-
-
-@mcp.tool(
     "get_product_detail_on_wickes",
     "Retrieve detailed product information from wickes.co.uk for a specific product URL.",
 )
@@ -257,43 +202,6 @@ async def get_product_detail_on_wickes(product_url: str) -> str:
 
 
 @mcp.tool(
-    "search_products_on_screwfix",
-    "Search for products on screwfix.com based on a provided keyword.",
-)
-async def search_products_on_screwfix(keyword: str) -> str:
-    """Search for products on screwfix.com based on a provided keyword.
-
-    Args:
-        keyword (str): The search term to query screwfix.com's product catalog.
-
-    Returns:
-        str: A JSON-encoded array of product data matching the given keyword.
-             Each product entry contains:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "url" (str): The full URL linking to the product's detail page.
-                - "promo" (str): The promotional text for the product, if any.
-
-    Example Result:
-        [
-            {
-                "title": "Hammer",
-                "price": "£9.99",
-                "url": "https://www.screwfix.com/hammer"
-            },
-            {
-                "title": "Drill",
-                "price": "£49.99",
-                "url": "https://www.screwfix.com/drill"
-            }
-        ]
-    """
-    result = await screwfix_crawler.product_search(keyword)
-
-    return json.dumps(result)
-
-
-@mcp.tool(
     "get_product_detail_on_screwfix",
     "Retrieve detailed product information from screwfix.com for a specific product URL.",
 )
@@ -321,42 +229,6 @@ async def get_product_detail_on_screwfix(product_url: str) -> str:
     """
 
     result = await screwfix_crawler.product_detail(product_url)
-    return json.dumps(result)
-
-
-@mcp.tool(
-    "search_products_on_homebase",
-    "Search for products on homebase.co.uk based on a provided keyword.",
-)
-async def search_products_on_homebase(keyword: str) -> str:
-    """Search for products on homebase.co.uk based on a provided keyword.
-
-    Args:
-        keyword (str): The search term to query homebase.co.uk's product catalog.
-
-    Returns:
-        str: A JSON-encoded array of product data matching the given keyword.
-             Each product entry contains:
-                - "title" (str): The product name.
-                - "price" (str): The price of the product as a string.
-                - "url" (str): The full URL linking to the product's detail page.
-
-    Example Result:
-        [
-            {
-                "title": "Hammer",
-                "price": "£9.99",
-                "url": "https://www.homebase.co.uk/hammer"
-            },
-            {
-                "title": "Drill",
-                "price": "£49.99",
-                "url": "https://www.homebase.co.uk/drill"
-            }
-        ]
-    """
-    result = await homebase_crawler.product_search(keyword)
-
     return json.dumps(result)
 
 

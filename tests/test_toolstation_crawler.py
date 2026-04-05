@@ -17,15 +17,16 @@ async def test_product_detail(mock_server):
     url = mock_server.url_for(path)
     result = await toolstation_crawler.product_detail(url)
 
-    assert result["title"] == "Wessex LED GU10 Dimmable Bulbs 3W Cool White 345lm"
-    assert result["price"] == "£12.55"
+    assert result.title == "Wessex LED GU10 Dimmable Bulbs 3W Cool White 345lm"
+    assert result.price == "£12.55"
     assert (
         "long-lasting performance and reliability with effective illumination."
-        in result["description"]
+        in result.description
     )
-    assert "Wessex Electrical" in result["detail"]
-    assert "GU10" in result["detail"]
-    assert result["promo"] == "15% Off"
+    assert "Wessex Electrical" in result.detail
+    assert "GU10" in result.detail
+    assert result.promo == "15% Off"
+    assert result.source == "Toolstation"
 
 
 async def test_product_search(mock_server):
@@ -41,8 +42,9 @@ async def test_product_search(mock_server):
 
     # Verify first product
     first_item = results[0]
-    assert first_item["title"] == "Stainless Steel Socket Button Screw M6 x 20mm"
-    assert first_item["price"] == "£5.58"
+    assert first_item.title == "Stainless Steel Socket Button Screw M6 x 20mm"
+    assert first_item.price == "£5.58"
     # The URL is transformed to include the mock server's base URL
-    assert first_item["url"].startswith(mock_server.url_for("/toolstation"))
-    assert first_item["promo"] is None
+    assert first_item.url.startswith(mock_server.url_for("/toolstation"))
+    assert first_item.promo is None
+    assert first_item.source == "Toolstation"

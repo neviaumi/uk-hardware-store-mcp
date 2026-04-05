@@ -1,3 +1,13 @@
-from .wickes_crawler import product_search, product_detail
+from .wickes_crawler import (
+    ProductDetailResponse,
+    ProductSearchResponse,
+    product_detail,
+    product_search,
+)
 
-__all__ = ["product_search", "product_detail"]
+__all__ = [
+    "ProductDetailResponse",
+    "ProductSearchResponse",
+    "product_detail",
+    "product_search",
+]

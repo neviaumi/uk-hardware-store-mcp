@@ -1,19 +1,33 @@
 import urllib.parse
-from typing import TypedDict
+from typing import Literal
 
 from parsel import Selector
+from pydantic import BaseModel, Field
 
 import app.config as config
 import app.crawlers.http_client as http_client
 from app.crawlers.utils import clean_html, clean_text, remove_spaces
 
+_source = "Screwfix"
 
-class ProductDetailResponse(TypedDict):
-    title: str
-    price: str
-    detail: str
-    description: str
-    promo: str | None
+
+class ProductDetailResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the product.", default=_source
+    )
+    title: str = Field(description="The full commercial name of the product.")
+    price: str = Field(
+        description="The current retail price, including the currency symbol (e.g., £9.99)."
+    )
+    detail: str = Field(
+        description="Comprehensive technical specifications or item details in HTML format."
+    )
+    description: str = Field(
+        description="A brief text summary of the product's features and features."
+    )
+    promo: str | None = Field(
+        description="Any active promotional offers or discounts associated with the product."
+    )
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
@@ -31,25 +45,38 @@ async def product_detail(url: str) -> ProductDetailResponse:
         [p.strip() for p in price_parts if p.strip() and "inc" not in p.lower()]
     )
 
-    return {
-        "title": remove_spaces(
+    return ProductDetailResponse(
+        title=remove_spaces(
             selector.css("[data-qaid='pdp-product-name'] *::text").get() or ""
         ),
-        "price": price,
-        "description": selector.css("[data-qaid='pdp-product-overview']::text").get()
+        price=price,
+        description=selector.css("[data-qaid='pdp-product-overview']::text").get()
         or "",
-        "detail": clean_html(selector.css("[data-qaid='pdp-tabpanel-2'] table").get())
+        detail=clean_html(selector.css("[data-qaid='pdp-tabpanel-2'] table").get())
         or "",
-        "promo": promo_message if promo_message is not None else bulk_saves,
-    }
+        promo=promo_message if promo_message is not None else bulk_saves,
+    )
 
 
-class ProductSearchResponse(TypedDict):
-    title: str
-    price: str
-    url: str
-    promo: str | None
-    description: str  # Adding description to match the original pushed dataset fields
+class ProductSearchResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the search result.", default=_source
+    )
+    title: str = Field(
+        description="The commercial name of the product as shown in search results."
+    )
+    price: str = Field(
+        description="The current retail price, including the currency symbol."
+    )
+    url: str = Field(
+        description="The absolute URL leading to the product's detail page."
+    )
+    promo: str | None = Field(
+        description="Any active promotional offers or discounts associated with the product."
+    )
+    description: str = Field(
+        description="A brief overview or bullet points describing the product."
+    )
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
@@ -78,13 +105,13 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         description = clean_html(product.css("[data-qaid='bullets']").get())
 
         results.append(
-            {
-                "title": remove_spaces(title) if title else "",
-                "price": price or "",
-                "url": f"{config.SCREWFIX_URL}{product_url}" if product_url else "",
-                "promo": promo_message_ctx if promo_message_ctx else bulk_saves_ctx,
-                "description": description or "",
-            }
+            ProductSearchResponse(
+                title=remove_spaces(title) if title else "",
+                price=price or "",
+                url=f"{config.SCREWFIX_URL}{product_url}" if product_url else "",
+                promo=promo_message_ctx if promo_message_ctx else bulk_saves_ctx,
+                description=description or "",
+            )
         )
 
     return results

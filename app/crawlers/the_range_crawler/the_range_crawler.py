@@ -1,18 +1,30 @@
 import urllib.parse
-from typing import TypedDict
+from typing import Literal
 
 from parsel import Selector
+from pydantic import BaseModel, Field
 
 import app.config as config
 import app.crawlers.http_client as http_client
 from app.crawlers.utils import clean_html, clean_text
 
+_source = "The Range"
 
-class ProductDetailResponse(TypedDict):
-    title: str
-    price: str
-    detail: str
-    promo: str | None
+
+class ProductDetailResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the product.", default=_source
+    )
+    title: str = Field(description="The full commercial name of the product.")
+    price: str = Field(
+        description="The current retail price, including the currency symbol."
+    )
+    detail: str = Field(
+        description="Comprehensive technical specifications or item details in HTML format."
+    )
+    promo: str | None = Field(
+        description="Any active promotional offers or discounts associated with the product."
+    )
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
@@ -32,18 +44,27 @@ async def product_detail(url: str) -> ProductDetailResponse:
     desc_nodes = selector.css("#product-dyn-desc, #product-specification")
     detail_html = " ".join(desc_nodes.getall()) if desc_nodes else ""
 
-    return {
-        "title": title.strip(),
-        "price": price,
-        "detail": clean_html(detail_html),
-        "promo": promo_text,
-    }
+    return ProductDetailResponse(
+        title=title.strip(),
+        price=price,
+        detail=clean_html(detail_html),
+        promo=promo_text,
+    )
 
 
-class ProductSearchResponse(TypedDict):
-    title: str
-    price: str
-    url: str
+class ProductSearchResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the search result.", default=_source
+    )
+    title: str = Field(
+        description="The commercial name of the product as shown in search results."
+    )
+    price: str = Field(
+        description="The current retail price, including the currency symbol."
+    )
+    url: str = Field(
+        description="The absolute URL leading to the product's detail page."
+    )
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
@@ -69,13 +90,13 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         price = item.css('[class*="priceSection"] span::text').get() or ""
 
         results.append(
-            {
-                "title": title.strip(),
-                "price": price,
-                "url": urllib.parse.urljoin(config.THE_RANGE_URL, url_path)
+            ProductSearchResponse(
+                title=title.strip(),
+                price=price,
+                url=urllib.parse.urljoin(config.THE_RANGE_URL, url_path)
                 if url_path
                 else "",
-            }
+            )
         )
 
     return results

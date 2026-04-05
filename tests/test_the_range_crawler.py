@@ -15,9 +15,10 @@ async def test_product_search(mock_server):
     assert isinstance(results, list)
     assert len(results) == 3
     first_item = results[0]
-    assert first_item["title"] == "Hex Bolt Nut and Washer"
-    assert first_item["price"] == "£1.99"
-    assert "hex-bolt-nut-and-washer" in first_item["url"]
+    assert first_item.title == "Hex Bolt Nut and Washer"
+    assert first_item.price == "£1.99"
+    assert "hex-bolt-nut-and-washer" in first_item.url
+    assert first_item.source == "The Range"
 
 
 async def test_product_detail(mock_server):
@@ -27,7 +28,8 @@ async def test_product_detail(mock_server):
     )
     url = mock_server.url_for(path)
     result = await the_range_crawler.product_detail(url)
-    assert result["title"] == "Saber 2000W Pressure Washer - Black and Orange"
-    assert result["price"] == "£99.99"
-    assert "160 bar" in result["detail"]
-    assert "Save £40.00" in result["promo"]
+    assert result.title == "Saber 2000W Pressure Washer - Black and Orange"
+    assert result.price == "£99.99"
+    assert "160 bar" in result.detail
+    assert "Save £40.00" in result.promo
+    assert result.source == "The Range"

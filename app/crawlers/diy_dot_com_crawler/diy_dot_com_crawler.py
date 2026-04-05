@@ -1,18 +1,30 @@
 import urllib.parse
-from typing import TypedDict
+from typing import Literal
 
 from parsel import Selector
+from pydantic import BaseModel, Field
 
 import app.config as config
 import app.crawlers.http_client as http_client
 from app.crawlers.utils import clean_html, remove_spaces
 
+_source = "B&Q"
 
-class ProductDetailResponse(TypedDict):
-    title: str
-    price: str
-    detail: str
-    promo: str | None
+
+class ProductDetailResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the product.", default=_source
+    )
+    title: str = Field(description="The full commercial name of the product.")
+    price: str = Field(
+        description="The current retail price, including the currency symbol (e.g., £25.00)."
+    )
+    detail: str = Field(
+        description="Comprehensive technical specifications or product details in HTML format."
+    )
+    promo: str | None = Field(
+        description="Any active promotional offers or discounts associated with the product."
+    )
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
@@ -21,23 +33,34 @@ async def product_detail(url: str) -> ProductDetailResponse:
 
     selector = Selector(text=response.text)
 
-    return {
-        "title": remove_spaces(
+    return ProductDetailResponse(
+        title=remove_spaces(
             selector.css("[data-testid='product-name']::text").get() or ""
         ),
-        "price": selector.css("[data-testid='product-price']::text").get() or "",
-        "detail": clean_html(selector.css("#product-details").get()),
-        "promo": selector.xpath(
+        price=selector.css("[data-testid='product-price']::text").get() or "",
+        detail=clean_html(selector.css("#product-details").get()),
+        promo=selector.xpath(
             '//a[@data-testid="promotion-link"]/preceding-sibling::p/text()'
         ).get(),
-    }
+    )
 
 
-class ProductSearchResponse(TypedDict):
-    title: str
-    price: str
-    url: str
-    promo: str | None
+class ProductSearchResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the search result.", default=_source
+    )
+    title: str = Field(
+        description="The commercial name of the product as shown in search results."
+    )
+    price: str = Field(
+        description="The current retail price, including the currency symbol."
+    )
+    url: str = Field(
+        description="The absolute URL leading to the product's detail page."
+    )
+    promo: str | None = Field(
+        description="A brief summary of any active promotion shown in the search snippet."
+    )
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
@@ -57,12 +80,12 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         promo = product.css("[data-testid='promotion-msg']::text").get()
 
         results.append(
-            {
-                "title": remove_spaces(title),
-                "price": price,
-                "url": f"{config.DIY_DOT_COM_URL}{product_url}" if product_url else "",
-                "promo": promo,
-            }
+            ProductSearchResponse(
+                title=remove_spaces(title),
+                price=price,
+                url=f"{config.DIY_DOT_COM_URL}{product_url}" if product_url else "",
+                promo=promo,
+            )
         )
 
     return results

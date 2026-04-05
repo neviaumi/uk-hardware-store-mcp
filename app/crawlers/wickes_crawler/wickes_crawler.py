@@ -1,19 +1,33 @@
 import urllib.parse
-from typing import TypedDict
+from typing import Literal
 
 from parsel import Selector
+from pydantic import BaseModel, Field
 
 import app.config as config
 import app.crawlers.http_client as http_client
 from app.crawlers.utils import clean_html, remove_spaces
 
+_source = "Wickes"
 
-class ProductDetailResponse(TypedDict):
-    title: str
-    price: str
-    detail: str
-    description: str
-    promo: str | None
+
+class ProductDetailResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the product.", default=_source
+    )
+    title: str = Field(description="The full commercial name of the product.")
+    price: str = Field(
+        description="The current retail price, including the currency symbol (e.g., £55.00)."
+    )
+    detail: str = Field(
+        description="Comprehensive technical specifications or item details in HTML format."
+    )
+    description: str = Field(
+        description="A brief text summary of the product's key details."
+    )
+    promo: str | None = Field(
+        description="Any active promotional offers or discounts associated with the product."
+    )
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
@@ -28,20 +42,31 @@ async def product_detail(url: str) -> ProductDetailResponse:
     price = selector.css(".main-price__value::text").get()
     description = selector.css(".product-main-info__description::text").get()
 
-    return {
-        "title": title.strip() if title else "",
-        "price": price.strip() if price else "",
-        "description": description.strip() if description else "",
-        "detail": clean_html(selector.css(".additional-info").get()) or "",
-        "promo": "".join(selector.css(".pdp-price__description *::text").getall()),
-    }
+    return ProductDetailResponse(
+        title=title.strip() if title else "",
+        price=price.strip() if price else "",
+        description=description.strip() if description else "",
+        detail=clean_html(selector.css(".additional-info").get()) or "",
+        promo="".join(selector.css(".pdp-price__description *::text").getall()),
+    )
 
 
-class ProductSearchResponse(TypedDict):
-    title: str
-    price: str
-    url: str
-    promo: str | None
+class ProductSearchResponse(BaseModel):
+    source: Literal[_source] = Field(
+        description="The source of the search result.", default=_source
+    )
+    title: str = Field(
+        description="The commercial name of the product as shown in search results."
+    )
+    price: str = Field(
+        description="The current retail price, including the currency symbol."
+    )
+    url: str = Field(
+        description="The absolute URL leading to the product's detail page."
+    )
+    promo: str | None = Field(
+        description="Any active promotional offers or discounts associated with the product."
+    )
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
@@ -61,12 +86,12 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
         price = product.css(".product-card__price-value::text").get()
 
         results.append(
-            {
-                "title": title.strip() if title else "",
-                "price": price.strip() if price else "",
-                "url": f"{config.WICKES_URL}{product_url}" if product_url else "",
-                "promo": promo.strip() if promo and "for" in promo else None,
-            }
+            ProductSearchResponse(
+                title=title.strip() if title else "",
+                price=price.strip() if price else "",
+                url=f"{config.WICKES_URL}{product_url}" if product_url else "",
+                promo=promo.strip() if promo and "for" in promo else None,
+            )
         )
 
     return results
