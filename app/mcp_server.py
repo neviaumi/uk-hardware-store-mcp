@@ -24,54 +24,55 @@ class Provider(str, Enum):
 mcp = FastMCP("Hardware Store", streamable_http_path="/", host="0.0.0.0")
 
 
-@mcp.prompt("Hardware store staff", "helpful assistant for a hardware store")
+@mcp.prompt("Hardware store staff", "Helpful assistant for a UK hardware store project")
 def hardware_store_staff() -> list[prompts.base.Message]:
     return [
         prompts.base.UserMessage(
             content="""You are a knowledgeable hardware store assistant with expertise in DIY tools and equipment. Your role is to:
 
 1. UNDERSTAND REQUIREMENTS:
-- Listen carefully to customer needs and use cases
-- Ask clarifying questions when necessary to better understand their project
-- Consider user's skill level when making recommendations
+- Listen carefully to customer needs and use cases.
+- Ask clarifying questions about their project (e.g., "What material are you drilling into?", "Is this for indoor or outdoor use?") to suggest the most appropriate tools.
+- Consider the user's skill level and safety requirements.
 
 2. PRODUCT RECOMMENDATIONS:
-- Search across diy.com, screwfix.com, toolstation.com, and wickes.co.uk
-- Provide 2-3 best options that match the customer's needs
-- Include price comparisons across different stores
-- Always include direct product URLs
+- Search across B&Q (diy.com), Homebase, Screwfix, Toolstation, and Wickes.
+- Provide 2-3 best options that match the customer's needs.
+- Include price comparisons across different stores when available.
+- Always include direct product URLs.
 
 3. PRODUCT INFORMATION:
-- Present key features and specifications
-- Explain why each recommendation suits their needs
-- Include any relevant safety information or usage tips
-- Mention ongoing promotions or deals if available
+- Present key features and specifications clearly.
+- Explain WHY each recommendation suits their specific project.
+- Include relevant safety information or mandatory accessories (e.g., "You'll need a SDS bit for this drill").
+- Mention ongoing promotions if available.
 
 4. INTERACTION STYLE:
-- Be friendly and professional
-- Use clear, jargon-free language
-- Offer follow-up assistance for additional questions
-- Provide practical advice for tool usage and maintenance
+- Be friendly, professional, and practical.
+- Use clear, jargon-free language.
+- Offer follow-up assistance for maintenance or usage tips.
 
-When suggesting products, format your response as:
+Format your product recommendations as follows:
 • Product Name
 • Price
 • Store Link
 • Key Features
 • Why it's recommended
 
-Remember to get specific details about the customer's project before making recommendations to ensure the most suitable tools are suggested."""
+Wait for the user to describe their project before offering specific product links."""
         ),
         prompts.base.AssistantMessage(
-            content="""Welcome to the Hardware Store! I'm here to help you find the right tools and equipment for your project. Could you tell me about what you're working on?"""
+            content="""Welcome to the Hardware Store! I'm here to help you find the perfect tools and supplies for your DIY projects. To give you the best advice, could you please tell me a bit more about what you're planning to work on today?"""
         ),
     ]
 
 
 class ProductDetailRequest(BaseModel):
-    provider: Provider = Field(description="The provider to search for products on.")
+    provider: Provider = Field(
+        description="The UK hardware retailer to fetch details from (B&Q, Homebase, Screwfix, Toolstation, or Wickes)."
+    )
     product_url: str = Field(
-        description="The absolute product URL (e.g., `https://www.diy.com/products/hammer`)."
+        description="The absolute product URL (e.g., `https://www.diy.com/products/hammer-12345`)."
     )
 
 
@@ -86,7 +87,7 @@ ProductDetailResponse = Union[
 
 @mcp.tool(
     "get_product_detail",
-    "Retrieve detailed product information from a provider for a specific product URL.",
+    "Fetch comprehensive product details (specifications, description, price) using a store URL from a specific provider.",
 )
 async def get_product_detail(request: ProductDetailRequest) -> ProductDetailResponse:
     match request.provider:
@@ -107,8 +108,12 @@ async def get_product_detail(request: ProductDetailRequest) -> ProductDetailResp
 
 
 class ProductsSearchRequest(BaseModel):
-    keyword: str = Field(description="The search term to query the product catalog.")
-    provider: Provider = Field(description="The provider to search for products on.")
+    keyword: str = Field(
+        description="The search term (e.g., 'M6 Hex Bolt', 'Combi Drill') to query the catalog."
+    )
+    provider: Provider = Field(
+        description="The UK hardware retailer to search on (B&Q, Homebase, Screwfix, Toolstation, or Wickes)."
+    )
 
 
 ProductSearchResponse = list[
@@ -122,15 +127,18 @@ ProductSearchResponse = list[
 ]
 
 
-@mcp.tool("search_products", "Search for products on multiple providers.")
+@mcp.tool(
+    "search_products",
+    "Search for products on a specific UK hardware retailer's catalog.",
+)
 async def search_products(request: ProductsSearchRequest) -> ProductSearchResponse:
-    """Search for products on multiple providers.
+    """Search for products on the specified retailer's website.
 
     Args:
-        request (ProductsSearchRequest): The search request.
+        request (ProductsSearchRequest): The search request containing the keyword and provider.
 
     Returns:
-        str: A JSON-encoded list of product search results from multiple providers.
+        ProductSearchResponse: A list of objects containing product name, price, URL, and thumbnail.
 
     """
     match request.provider:
