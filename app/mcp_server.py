@@ -11,6 +11,9 @@ import app.crawlers.homebase_crawler.homebase_crawler as homebase_crawler
 import app.crawlers.screwfix_crawler as screwfix_crawler
 import app.crawlers.toolstation_crawler as toolstation_crawler
 import app.crawlers.wickes_crawler as wickes_crawler
+from app.logger import get_logger_for_mcp_server
+
+mcp_logger = get_logger_for_mcp_server("mcp-server")
 
 
 class Provider(str, Enum):
@@ -100,6 +103,9 @@ async def get_product_detail(
         description="The request containing the product URL."
     ),
 ) -> ProductDetailResponse:
+    mcp_logger.info(
+        f"Fetching product details from {provider}, url: {request.product_url}",
+    )
     match provider:
         case Provider.DIY_DOT_COM:
             result = await diy_dot_com_crawler.product_detail(request.product_url)
@@ -152,16 +158,7 @@ async def search_products(
         description="The search request containing the keyword."
     ),
 ) -> ProductSearchResponse:
-    """Search for products on the specified retailer's website.
-
-    Args:
-        provider (Provider): The hardware retailer to search on.
-        request (ProductsSearchRequest): The search request containing the keyword.
-
-    Returns:
-        ProductSearchResponse: A list of objects containing product name, price, URL, and thumbnail.
-
-    """
+    mcp_logger.info(f"Searching for '{request.keyword}' on {provider}")
     match provider:
         case Provider.DIY_DOT_COM:
             result = await diy_dot_com_crawler.product_search(request.keyword)

@@ -9,7 +9,6 @@ import app.crawlers.http_client as http_client
 from app.crawlers.utils import clean_html, clean_text, remove_spaces
 
 SOURCE_IDENTIFIER = "Toolstation"
-TOOLSTATION_API = f"{config.TOOLSTATION_URL}/api"
 
 
 class ProductDetailResponse(BaseModel):
@@ -94,6 +93,7 @@ class ProductSearchResponse(BaseModel):
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
+    TOOLSTATION_API = f"{config.TOOLSTATION_URL}/api"
     query = urllib.parse.urlencode(
         {
             "request_type": "search",
