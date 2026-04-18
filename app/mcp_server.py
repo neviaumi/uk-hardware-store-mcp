@@ -24,7 +24,13 @@ class Provider(str, Enum):
     WICKES = wickes_crawler.SOURCE_IDENTIFIER
 
 
-mcp = FastMCP("Hardware Store", streamable_http_path="/", host="0.0.0.0")
+mcp = FastMCP(
+    "Hardware Store",
+    streamable_http_path="/",
+    host="0.0.0.0",
+    json_response=True,
+    stateless_http=True,
+)
 
 
 @mcp.prompt("Hardware store staff", "Helpful assistant for a UK hardware store project")
@@ -87,7 +93,8 @@ ProductDetailResponse = Union[
 
 @mcp.tool(
     "get_product_detail",
-    "Fetch comprehensive product details (specifications, description, price) using a store URL from a specific UK hardware retailer.",
+    title="Get Product Detail",
+    description="Fetch comprehensive product details (specifications, description, price) using a store URL from a specific UK hardware retailer.",
     annotations={
         "readOnlyHint": True,
         "destructiveHint": False,
@@ -142,7 +149,8 @@ ProductSearchResponse = list[
 
 @mcp.tool(
     "search_products",
-    "Search for products on a specific UK hardware retailer's catalog.",
+    title="Search Products",
+    description="Search for products on a specific UK hardware retailer's catalog.",
     annotations={
         "readOnlyHint": True,
         "destructiveHint": False,
