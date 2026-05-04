@@ -1,9 +1,10 @@
 from . import (
     diy_dot_com_crawler,
-    wickes_crawler,
-    toolstation_crawler,
-    screwfix_crawler,
     homebase_crawler,
+    screwfix_crawler,
+    the_range_crawler,
+    toolstation_crawler,
+    wickes_crawler,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "toolstation_crawler",
     "screwfix_crawler",
     "homebase_crawler",
+    "the_range_crawler",
 ]
