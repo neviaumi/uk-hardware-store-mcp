@@ -5,6 +5,8 @@ services:
       context: ./
       dockerfile: Dockerfile
     command: ./scripts/docker/start.sh
+    environment:
+      - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
     entrypoint: /bin/sh
     ports:
       - "8082:8080"
