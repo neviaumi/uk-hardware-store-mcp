@@ -2,4 +2,4 @@
 
 set -ex
 uv sync
-uv run patchright install firefox
+uv run playwright install firefox
