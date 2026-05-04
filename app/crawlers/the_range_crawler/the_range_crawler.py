@@ -1,11 +1,10 @@
 import urllib.parse
 from typing import Literal
 
-from parsel import Selector
 from pydantic import BaseModel, Field
 
 import app.config as config
-import app.crawlers.http_client as http_client
+from app.crawlers.browser import create_browser
 from app.crawlers.utils import clean_html, clean_text
 
 SOURCE_IDENTIFIER = "The Range"
@@ -28,28 +27,47 @@ class ProductDetailResponse(BaseModel):
 
 
 async def product_detail(url: str) -> ProductDetailResponse:
-    async with http_client.create_client() as client:
-        response = await client.get(url)
+    async with create_browser() as context:
+        page = await context.new_page()
+        await page.goto(url)
+        await page.wait_for_selector("h1#product-dyn-title", timeout=90000)
 
-    selector = Selector(text=response.text)
+        # Title is in h1#product-dyn-title
+        title_locator = page.locator("h1#product-dyn-title")
+        title = (
+            (await title_locator.inner_text())
+            if await title_locator.count() > 0
+            else ""
+        )
 
-    # Title is in h1#product-dyn-title
-    title = selector.css("h1#product-dyn-title::text").get() or ""
-    # Price for detail is in div#min_price
-    price = selector.css("#product-dyn-price #min_price::text").get() or ""
+        # Price for detail is in div#min_price
+        price_locator = page.locator("#product-dyn-price #min_price")
+        price = (
+            (await price_locator.inner_text())
+            if await price_locator.count() > 0
+            else ""
+        )
 
-    promo_node = selector.css("#product-price-saving")
-    promo_text = clean_text(promo_node.css("*::text").getall()) if promo_node else None
+        promo_locator = page.locator("#product-price-saving")
+        promo_text = None
+        if await promo_locator.count() > 0:
+            promo_text = clean_text(await promo_locator.all_inner_texts())
 
-    desc_nodes = selector.css("#product-dyn-desc, #product-specification")
-    detail_html = " ".join(desc_nodes.getall()) if desc_nodes else ""
+        desc_locators = page.locator("#product-dyn-desc, #product-specification")
+        detail_html = ""
+        count = await desc_locators.count()
+        if count > 0:
+            parts = []
+            for i in range(count):
+                parts.append(await desc_locators.nth(i).inner_html())
+            detail_html = " ".join(parts)
 
-    return ProductDetailResponse(
-        title=title.strip(),
-        price=price,
-        detail=clean_html(detail_html),
-        promo=promo_text,
-    )
+        return ProductDetailResponse(
+            title=title.strip(),
+            price=price.strip(),
+            detail=clean_html(detail_html),
+            promo=promo_text,
+        )
 
 
 class ProductSearchResponse(BaseModel):
@@ -68,35 +86,55 @@ class ProductSearchResponse(BaseModel):
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
-    query = urllib.parse.urlencode(
-        {
-            "q": keyword,
-            "sort": "relevance",
-            "attributes.Available_To_Order": "TRUE",
-            "page": "1",
-        }
-    )
+    query = urllib.parse.urlencode({
+        "q": keyword,
+        "sort": "relevance",
+        "attributes.Available_To_Order": "TRUE",
+        "page": "1",
+    })
     url = f"{config.THE_RANGE_URL}/search?{query}"
 
-    async with http_client.create_client() as client:
-        response = await client.get(url)
-
-    selector = Selector(text=response.text)
-    results = []
-
-    for item in selector.css('article[data-testid="product-card"]'):
-        title = item.css('[data-testid="product-name"]::text').get() or ""
-        url_path = item.css('[data-testid="product-name"]::attr(href)').get() or ""
-        price = item.css('[class*="priceSection"] span::text').get() or ""
-
-        results.append(
-            ProductSearchResponse(
-                title=title.strip(),
-                price=price,
-                url=urllib.parse.urljoin(config.THE_RANGE_URL, url_path)
-                if url_path
-                else "",
-            )
+    async with create_browser() as context:
+        page = await context.new_page()
+        await page.goto(url)
+        await page.wait_for_selector(
+            'article[data-testid="product-card"]', timeout=90000
         )
+
+        product_cards = page.locator('article[data-testid="product-card"]')
+        results = []
+        count = await product_cards.count()
+
+        for i in range(count):
+            card = product_cards.nth(i)
+            name_locator = card.locator('[data-testid="product-name"]')
+
+            title = (
+                (await name_locator.inner_text())
+                if await name_locator.count() > 0
+                else ""
+            )
+            url_path = (
+                (await name_locator.get_attribute("href"))
+                if await name_locator.count() > 0
+                else ""
+            )
+
+            price_locator = card.locator('[class*="priceSection"] span')
+            price = (
+                (await price_locator.inner_text())
+                if await price_locator.count() > 0
+                else ""
+            )
+
+            results.append(
+                ProductSearchResponse(
+                    title=title.strip(),
+                    price=price.strip(),
+                    url=urllib.parse.urljoin(config.THE_RANGE_URL, url_path)
+                    if url_path
+                    else "",
+                )
+            )
 
     return results

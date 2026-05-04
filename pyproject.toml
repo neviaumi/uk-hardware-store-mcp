@@ -10,6 +10,7 @@ dependencies = [
   "fastapi[standard]==0.135.2",
   "mcp[cli]==1.26.0",
   "parsel==1.11.0",
+  "patchright==1.59.1",
   "pydantic==2.11.5",
   "rich==14.0.0",
 ]

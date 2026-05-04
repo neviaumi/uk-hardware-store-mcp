@@ -23,6 +23,16 @@ The terminal execution of tests is managed via `uv run pytest`.
 uv run pytest
 ```
 
+### Browserless Token Requirement
+When running tests that utilize the browser-based stack (e.g., The Range crawler), a valid `BROWSERLESS_API_KEY` must be present in the environment.
+
+- **Local Execution**: The `scripts/test.sh` script automatically attempts to fetch the latest token from Google Cloud Secret Manager:
+  ```bash
+  export BROWSERLESS_API_KEY=$(gcloud secrets versions access latest --secret="browserless-token")
+  ```
+- **Manual Execution**: If running `pytest` directly without the script, ensure you have authenticated with `gcloud` and exported the key manually.
+- **CI Execution**: These tests are typically skipped in CI (via `@skip_if_ci`) as they require live external connections and secrets.
+
 ---
 
 ## 2. Mock Data Capture Protocol

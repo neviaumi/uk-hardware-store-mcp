@@ -4,7 +4,11 @@ This document establishes the universal standards for developing and maintaining
 
 ## 1. Core Principles
 
-Crawlers are responsible for parsing third-party e-commerce retail data reliably. The primary focus should be on **resiliency against layout changes** and **mimicking legitimate browser traffic** without resorting to full headless browser engines unless completely necessary.
+Crawlers are responsible for parsing third-party e-commerce retail data reliably. The primary focus should be on **resiliency against layout changes** and **mimicking legitimate browser traffic**. 
+
+The repository supports two distinct crawling paradigms:
+1. **HTTP Client (Default)**: Fast, lightweight, and uses static HTML parsing.
+2. **Headless Browser (Fallback)**: Used only when JavaScript execution or advanced anti-bot bypass (e.g., Cloudflare) is strictly required.
 
 ## 2. HTTP Client Standards
 
@@ -62,12 +66,40 @@ Provide robust fallbacks for dynamic implementations.
 
 ---
 
-## 4. Testing Requirements
+---
+
+## 5. Browser-based Crawling
+
+When a site's data is heavily dependent on JavaScript or protected by sophisticated anti-bot challenges that `curl-cffi` cannot bypass, use the browser-based stack.
+
+### The Browser Stack: `patchright` + `browserless`
+
+- **Client**: Use `patchright` (a patched version of Playwright) connected to a `browserless` service for CDP-based interaction.
+- **Authentication**: The stack requires a `BROWSERLESS_API_KEY`. 
+    - Locally, `scripts/test.sh` fetches this automatically from `gcloud` secrets.
+    - If running manually, use: `export BROWSERLESS_API_KEY=$(gcloud secrets versions access latest --secret="browserless-token")`.
+- **Context Management**: Always use the `create_browser()` utility from `app/crawlers/browser.py` to ensure consistent session handling and connection timeouts.
+- **Locators vs. Selectors**: When in browser mode, prioritize using native Playwright **Locators** (`page.locator()`) instead of `parsel.Selector`. Locators are more robust as they can wait for elements to be visible/attached automatically.
+
+### Strategic Implementation
+- **Wait Strategies**: Avoid hardcoded sleeps. Use `wait_for_selector()` or `wait_for_load_state("networkidle")` with explicit timeouts.
+- **Timeouts**: Define generous timeouts (e.g., 60-90 seconds) for initial page loads to account for solver delays.
+
+---
+
+## 6. Testing Requirements
 
 A crawler is only complete when it adheres to the **Spec Driven Development (SDD) Testing Protocol**.
 
-> [!NOTE]
-> All HTML fixtures must be captured manually and served locally using `pytest-httpserver`. 
+### HTTP Crawler Testing (Mocked)
+- **Standard**: All HTML fixtures must be captured manually and served locally using `pytest-httpserver`. 
+- **Rule**: **No live API requests** should be made during regular test suite execution for HTTP crawlers.
+- **Reference**: Review [Testing Rules](file:///Users/david/apps/uk-hardware-store-mcp/.agents/rules/testing.md).
 
-- **No live API requests** should be made during test suite execution.
-- Review the primary [Testing Rules](file:///Users/david/apps/uk-hardware-store-mcp/.agents/rules/testing.md) document to follow instructions on how to run local `curl` capture commands for mocks whenever structural parsing changes.
+### Browser Crawler Testing (Live/Skipped)
+- **Standard**: Browser-based crawlers often require live connections to test interaction with anti-bot solvers.
+- **Requirements**:
+    - Tests **MUST** be generated for every browser crawler to verify structural parsing.
+    - Tests **MUST** be decorated with `@skip_if_ci` (from `tests/__init__.py`) to prevent execution in CI environments where secrets/browserless might be unavailable.
+    - These tests are intended for local development and manual verification only.
+
