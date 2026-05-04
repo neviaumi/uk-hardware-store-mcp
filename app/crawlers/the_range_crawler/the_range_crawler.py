@@ -29,7 +29,8 @@ class ProductDetailResponse(BaseModel):
 async def product_detail(url: str) -> ProductDetailResponse:
     async with create_browser() as context:
         page = await context.new_page()
-        await page.goto(url)
+        await page.goto(url, wait_until="networkidle")
+        await page.screenshot(path="debug_screenshot.png")
         await page.wait_for_selector("h1#product-dyn-title", timeout=90000)
 
         # Title is in h1#product-dyn-title
@@ -96,17 +97,16 @@ async def product_search(keyword: str) -> list[ProductSearchResponse]:
 
     async with create_browser() as context:
         page = await context.new_page()
-        await page.goto(url)
+
+        await page.goto(url, wait_until="networkidle")
         await page.wait_for_selector(
             'article[data-testid="product-card"]', timeout=90000
         )
 
         product_cards = page.locator('article[data-testid="product-card"]')
         results = []
-        count = await product_cards.count()
 
-        for i in range(count):
-            card = product_cards.nth(i)
+        for card in await product_cards.all():
             name_locator = card.locator('[data-testid="product-name"]')
 
             title = (

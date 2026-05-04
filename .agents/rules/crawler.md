@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Web Crawler Implementation Standards
 
 This document establishes the universal standards for developing and maintaining web crawlers within this repository. All new crawlers and major revisions must align with these guidelines to ensure performance, stability, and anti-bot resilience.
@@ -72,9 +76,9 @@ Provide robust fallbacks for dynamic implementations.
 
 When a site's data is heavily dependent on JavaScript or protected by sophisticated anti-bot challenges that `curl-cffi` cannot bypass, use the browser-based stack.
 
-### The Browser Stack: `patchright` + `browserless`
+### The Browser Stack: `playwright` + `browserless`
 
-- **Client**: Use `patchright` (a patched version of Playwright) connected to a `browserless` service for CDP-based interaction.
+- **Client**: Use `playwright` connected to a `browserless` service for CDP-based interaction.
 - **Authentication**: The stack requires a `BROWSERLESS_API_KEY`. 
     - Locally, `scripts/test.sh` fetches this automatically from `gcloud` secrets.
     - If running manually, use: `export BROWSERLESS_API_KEY=$(gcloud secrets versions access latest --secret="browserless-token")`.
