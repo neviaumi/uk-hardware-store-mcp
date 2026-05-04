@@ -87,12 +87,14 @@ class ProductSearchResponse(BaseModel):
 
 
 async def product_search(keyword: str) -> list[ProductSearchResponse]:
-    query = urllib.parse.urlencode({
-        "q": keyword,
-        "sort": "relevance",
-        "attributes.Available_To_Order": "TRUE",
-        "page": "1",
-    })
+    query = urllib.parse.urlencode(
+        {
+            "q": keyword,
+            "sort": "relevance",
+            "attributes.Available_To_Order": "TRUE",
+            "page": "1",
+        }
+    )
     url = f"{config.THE_RANGE_URL}/search?{query}"
 
     async with create_browser() as context:
